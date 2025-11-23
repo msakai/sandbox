@@ -1,14 +1,12 @@
--- Cardano's formula
--- https://en.wikipedia.org/wiki/Cubic_equation#Cardano's_formula
 
 import Data.Complex
 
--- Solve the equation ax³ + b³x + cx + d = 0
+-- Solve the equation ax³ + bx² + cx + d = 0
 solveCubicEquation :: (RealFloat a) => Complex a -> Complex a -> Complex a -> Complex a -> (Complex a, Complex a, Complex a)
 solveCubicEquation a b c d =
   -- x³ + a₂ x² + a₁ x + a₀ = 0
   -- x = y - a₂ / 3
-  -- y³ + (a₁ - a₂**2 / 3) y + (a₀ - a₁*a₂ / 3 + 2 * a₂**3 / 27) = 0
+  -- y³ + (a₁ - a₂² / 3) y + (a₀ - a₁ a₂ / 3 + 2a₂³ / 27) = 0
   case solveCubicEquation' (a₁ - a₂**2 / 3) (a₀ - a₁*a₂ / 3 + 2 * a₂**3 / 27) of
     (y1, y2, y3) -> (f y1, f y2, f y3)
   where
@@ -17,7 +15,9 @@ solveCubicEquation a b c d =
     a₀ = d / a
     f y = y - a₂ / 3
 
--- Solve the equation x³ + px + q = 0
+-- Solve the equation x³ + px + q = 0 using Cardano's formula
+--
+-- https://en.wikipedia.org/wiki/Cubic_equation#Cardano's_formula
 solveCubicEquation' :: (RealFloat a) => Complex a -> Complex a -> (Complex a, Complex a, Complex a)
 solveCubicEquation' p q = (u1 + v1, u2 + v2, u3 + v3)
   where
