@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>数独ソルバー</title>
+    <title>Sudoku Solver</title>
     <style>
         * {
             margin: 0;
@@ -70,7 +70,7 @@
             color: #2e7d32;
         }
 
-        /* 3x3ブロックの境界を太くする */
+        /* Make 3x3 block boundaries thicker */
         .cell:nth-child(9n+3),
         .cell:nth-child(9n+6) {
             border-right: 2px solid #666;
@@ -160,23 +160,23 @@
 </head>
 <body>
     <div class="container">
-        <h1>数独ソルバー</h1>
+        <h1>Sudoku Solver</h1>
 
         <div class="instructions">
-            <strong>使い方:</strong>
+            <strong>How to use:</strong>
             <ul>
-                <li>セルをクリックして1〜9の数字を入力</li>
-                <li>「例題を読み込む」で簡単な問題を試せます</li>
-                <li>「解く」ボタンで自動的に解を求めます</li>
+                <li>Click a cell and enter a number from 1 to 9</li>
+                <li>Click "Load Example" to try a simple puzzle</li>
+                <li>Click "Solve" button to automatically find the solution</li>
             </ul>
         </div>
 
         <div class="sudoku-grid" id="grid"></div>
 
         <div class="buttons">
-            <button class="example-btn" onclick="loadExample()">例題を読み込む</button>
-            <button class="solve-btn" onclick="solveSudoku()">解く</button>
-            <button class="clear-btn" onclick="clearGrid()">クリア</button>
+            <button class="example-btn" onclick="loadExample()">Load Example</button>
+            <button class="solve-btn" onclick="solveSudoku()">Solve</button>
+            <button class="clear-btn" onclick="clearGrid()">Clear</button>
         </div>
 
         <div class="message" id="message"></div>
@@ -185,7 +185,7 @@
     <script>
         let initialCells = new Set();
 
-        // グリッドの初期化
+        // Initialize grid
         function initGrid() {
             const grid = document.getElementById('grid');
             grid.innerHTML = '';
@@ -209,7 +209,7 @@
             }
         }
 
-        // グリッドから現在の状態を取得
+        // Get current state from grid
         function getGrid() {
             const grid = [];
             for (let i = 0; i < 9; i++) {
@@ -223,7 +223,7 @@
             return grid;
         }
 
-        // グリッドに値を設定
+        // Set values to grid
         function setGrid(grid, markSolved = false) {
             for (let i = 0; i < 9; i++) {
                 for (let j = 0; j < 9; j++) {
@@ -238,23 +238,23 @@
             }
         }
 
-        // 数字が配置可能かチェック
+        // Check if number can be placed
         function isValid(grid, row, col, num) {
-            // 行をチェック
+            // Check row
             for (let x = 0; x < 9; x++) {
                 if (grid[row][x] === num) {
                     return false;
                 }
             }
 
-            // 列をチェック
+            // Check column
             for (let x = 0; x < 9; x++) {
                 if (grid[x][col] === num) {
                     return false;
                 }
             }
 
-            // 3x3ブロックをチェック
+            // Check 3x3 block
             const startRow = Math.floor(row / 3) * 3;
             const startCol = Math.floor(col / 3) * 3;
             for (let i = 0; i < 3; i++) {
@@ -268,7 +268,7 @@
             return true;
         }
 
-        // バックトラッキングで数独を解く
+        // Solve Sudoku using backtracking
         function solve(grid) {
             for (let row = 0; row < 9; row++) {
                 for (let col = 0; col < 9; col++) {
@@ -291,13 +291,13 @@
             return true;
         }
 
-        // 数独を解く
+        // Solve Sudoku
         function solveSudoku() {
             const message = document.getElementById('message');
             message.textContent = '';
             message.className = 'message';
 
-            // 初期セルを記録
+            // Record initial cells
             initialCells.clear();
             for (let i = 0; i < 81; i++) {
                 const cell = document.getElementById(`cell-${i}`);
@@ -312,15 +312,15 @@
 
             if (solve(gridCopy)) {
                 setGrid(gridCopy, true);
-                message.textContent = '解けました！';
+                message.textContent = 'Solved!';
                 message.classList.add('success');
             } else {
-                message.textContent = '解が見つかりませんでした。入力を確認してください。';
+                message.textContent = 'No solution found. Please check your input.';
                 message.classList.add('error');
             }
         }
 
-        // グリッドをクリア
+        // Clear grid
         function clearGrid() {
             const message = document.getElementById('message');
             message.textContent = '';
@@ -334,11 +334,11 @@
             }
         }
 
-        // 例題を読み込む
+        // Load example
         function loadExample() {
             clearGrid();
 
-            // 簡単な数独の問題
+            // Simple Sudoku puzzle
             const example = [
                 [5, 3, 0, 0, 7, 0, 0, 0, 0],
                 [6, 0, 0, 1, 9, 5, 0, 0, 0],
@@ -354,7 +354,7 @@
             setGrid(example);
         }
 
-        // ページ読み込み時にグリッドを初期化
+        // Initialize grid on page load
         initGrid();
     </script>
 </body>

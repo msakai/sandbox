@@ -15,6 +15,10 @@ open sudoku.html
 
 The app runs entirely in the browser - no server or build step required.
 
+## Coding Guidelines
+
+**Language:** All text content, comments, and user-facing messages should be written in English unless explicitly instructed otherwise.
+
 ## Architecture
 
 **Single-file structure:** All HTML, CSS, and JavaScript are in `sudoku.html`
