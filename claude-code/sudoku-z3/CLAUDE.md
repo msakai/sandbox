@@ -43,10 +43,6 @@ npm run preview
 - `public/z3-built.wasm`: Z3 WASM binary (~33MB)
 - `vite.config.js`: Vite config with COOP/COEP headers and global polyfill
 
-**Legacy files (for reference):**
-- `sudoku.html`: Original MiniSat-based implementation
-- `minisat.js`: MiniSat SAT solver compiled via Emscripten
-
 **Key components in src/main.js:**
 
 - **Grid management:**
