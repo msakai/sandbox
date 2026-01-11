@@ -157,6 +157,12 @@
             margin-bottom: 5px;
         }
     </style>
+<script>
+        var Module = {
+            noInitialRun: true
+        };
+    </script>
+    <script src="minisat.js"></script>
 </head>
 <body>
     <div class="container">
@@ -238,60 +244,32 @@
             }
         }
 
-        // Check if number can be placed
-        function isValid(grid, row, col, num) {
-            // Check row
-            for (let x = 0; x < 9; x++) {
-                if (grid[row][x] === num) {
-                    return false;
+        // Convert grid array to string format for minisat
+        function gridToString(grid) {
+            let result = '';
+            for (let i = 0; i < 9; i++) {
+                for (let j = 0; j < 9; j++) {
+                    const value = grid[i][j];
+                    result += value ? value.toString() : '.';
                 }
             }
-
-            // Check column
-            for (let x = 0; x < 9; x++) {
-                if (grid[x][col] === num) {
-                    return false;
-                }
-            }
-
-            // Check 3x3 block
-            const startRow = Math.floor(row / 3) * 3;
-            const startCol = Math.floor(col / 3) * 3;
-            for (let i = 0; i < 3; i++) {
-                for (let j = 0; j < 3; j++) {
-                    if (grid[startRow + i][startCol + j] === num) {
-                        return false;
-                    }
-                }
-            }
-
-            return true;
+            return result;
         }
 
-        // Solve Sudoku using backtracking
-        function solve(grid) {
-            for (let row = 0; row < 9; row++) {
-                for (let col = 0; col < 9; col++) {
-                    if (grid[row][col] === 0) {
-                        for (let num = 1; num <= 9; num++) {
-                            if (isValid(grid, row, col, num)) {
-                                grid[row][col] = num;
-
-                                if (solve(grid)) {
-                                    return true;
-                                }
-
-                                grid[row][col] = 0;
-                            }
-                        }
-                        return false;
-                    }
+        // Convert string format to grid array
+        function stringToGrid(str) {
+            const grid = [];
+            for (let i = 0; i < 9; i++) {
+                grid[i] = [];
+                for (let j = 0; j < 9; j++) {
+                    const c = str.charAt(i * 9 + j);
+                    grid[i][j] = /\d/.test(c) ? parseInt(c) : 0;
                 }
             }
-            return true;
+            return grid;
         }
 
-        // Solve Sudoku
+        // Solve Sudoku using minisat.js
         function solveSudoku() {
             const message = document.getElementById('message');
             message.textContent = '';
@@ -308,10 +286,15 @@
             }
 
             const grid = getGrid();
-            const gridCopy = grid.map(row => [...row]);
+            const inputStr = gridToString(grid);
 
-            if (solve(gridCopy)) {
-                setGrid(gridCopy, true);
+            // Call minisat solver
+            const sudoku = Module.cwrap('sudoku_c', 'string', ['string']);
+            const outputStr = sudoku(inputStr);
+
+            if (outputStr !== '') {
+                const solvedGrid = stringToGrid(outputStr);
+                setGrid(solvedGrid, true);
                 message.textContent = 'Solved!';
                 message.classList.add('success');
             } else {

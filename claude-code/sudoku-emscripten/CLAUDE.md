@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a single-page Sudoku solver application built with vanilla HTML, CSS, and JavaScript. The entire application is contained in `sudoku.html` with no external dependencies or build process.
+This is a single-page Sudoku solver application built with vanilla HTML, CSS, and JavaScript. The main application is contained in `sudoku.html`, which uses `minisat.js` (a SAT solver compiled to JavaScript via Emscripten) to solve puzzles.
 
 ## Development
 
@@ -21,26 +21,29 @@ The app runs entirely in the browser - no server or build step required.
 
 ## Architecture
 
-**Single-file structure:** All HTML, CSS, and JavaScript are in `sudoku.html`
+**File structure:**
+- `sudoku.html`: Main application with HTML, CSS, and JavaScript
+- `minisat.js`: MiniSat SAT solver compiled to JavaScript via Emscripten
 
-**Key components:**
+**Key components in sudoku.html:**
 
-- **Grid management** (lines 189-239):
+- **Grid management:**
   - `initGrid()`: Dynamically generates 81 input elements for the 9x9 grid
   - `getGrid()`: Converts DOM state to a 9x9 array representation
   - `setGrid()`: Updates DOM from array representation
 
-- **Solver algorithm** (lines 242-292):
-  - `isValid()`: Validates number placement against Sudoku rules (row, column, 3x3 block)
-  - `solve()`: Recursive backtracking algorithm that tries numbers 1-9 in empty cells
+- **Solver integration:**
+  - `gridToString()`: Converts 9x9 array to 81-character string (digits for filled cells, `.` for empty)
+  - `stringToGrid()`: Converts 81-character string back to 9x9 array
+  - `solveSudoku()`: Calls MiniSat solver via `Module.cwrap('sudoku_c', 'string', ['string'])`
 
 - **Visual feedback:**
   - `.initial` class: User's original input (gray background)
   - `.solved` class: Auto-generated solution (green background)
-  - 3x3 block boundaries use CSS nth-child selectors (lines 74-82)
+  - 3x3 block boundaries use CSS nth-child selectors
 
 **State management:**
 - `initialCells` Set tracks which cells were user-provided vs auto-solved
 - No framework - direct DOM manipulation
 
-**Algorithm:** Classic backtracking with constraint checking. Tries numbers sequentially, recurses on valid placements, backtracks on conflicts.
+**Solver:** Uses MiniSat SAT solver. The Sudoku puzzle is encoded as a SAT problem and solved using the MiniSat algorithm compiled to JavaScript via Emscripten.
