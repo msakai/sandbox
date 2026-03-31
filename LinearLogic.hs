@@ -57,6 +57,26 @@ plus_associative = (f, g)
     f = either (either Left (Right . Left)) (Right . Right)
     g = either (Left . Left) (either (Left . Right) Right)
 
+tensor_distribute_over_plus :: a :⊗ (b :⊕ c) :≅ (a :⊗ b) :⊕ (a :⊗ c)
+tensor_distribute_over_plus = (f, g)
+  where
+    f :: a :⊗ (b :⊕ c) %1 -> (a :⊗ b) :⊕ (a :⊗ c)
+    f (a, Left b) = Left (a, b)
+    f (a, Right c) = Right (a, c)
+
+    g :: (a :⊗ b) :⊕ (a :⊗ c) %1 -> a :⊗ (b :⊕ c)
+    g (Left (a, b)) = (a, Left b)
+    g (Right (a, c)) = (a, Right c)
+
+tensor_distribute_over_zero :: a :⊗ Zero :≅ Zero
+tensor_distribute_over_zero = (f, g)
+  where
+    f :: a :⊗ Zero %1 -> Zero
+    f (_a, void) = case void of {}
+
+    g :: Zero %1 -> a :⊗ Zero
+    g void = case void of {}
+
 -- -------------------------------------------------------------------
 -- & (with) and ⊤ (top)
 -- -------------------------------------------------------------------
