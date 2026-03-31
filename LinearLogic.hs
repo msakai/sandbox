@@ -11,6 +11,12 @@ module LinearLogic where
 import Prelude.Linear
 import Data.Void
 
+infix 4 :≅
+infixl 6 :⊕
+infixl 7 :⊗, :&
+
+type a :≅ b = (a %1 -> b, b %1 -> a)
+
 -- -------------------------------------------------------------------
 -- ⊗ (tensor) and 1 (one)
 -- -------------------------------------------------------------------
@@ -19,13 +25,13 @@ type a :⊗ b = (a, b)
 
 type One = ()
 
-tensor_left_identity :: (One :⊗ a %1 -> a, a %1 -> One :⊗ a)
+tensor_left_identity :: One :⊗ a :≅ a
 tensor_left_identity = (\((), a) -> a, \a -> ((), a))
 
 tensor_commutative :: a :⊗ b -> b :⊗ a
 tensor_commutative (a,b) = (b,a)
 
-tensor_associative :: ((a :⊗ b) :⊗ c %1 -> a :⊗ (b :⊗ c), a :⊗ (b :⊗ c) %1 -> (a :⊗ b) :⊗ c)
+tensor_associative :: (a :⊗ b) :⊗ c :≅ a :⊗ (b :⊗ c)
 tensor_associative = (\((a,b),c) -> (a,(b,c)), \(a,(b,c)) -> ((a,b),c))
 
 -- -------------------------------------------------------------------
@@ -39,13 +45,13 @@ type Zero = Void
 absurd' :: Zero %1 -> a
 absurd' = \case {}
 
-plus_left_identity :: (Zero :⊕ a %1 -> a, a %1 -> Zero :⊕ a)
+plus_left_identity :: Zero :⊕ a :≅ a
 plus_left_identity = (either absurd' id, Right)
 
 plus_commutative :: a :⊕ b %1 -> b :⊕ a
 plus_commutative = either Right Left
 
-plus_associative :: ((a :⊕ b) :⊕ c %1 -> a :⊕ (b :⊕ c), a :⊕ (b :⊕ c) %1 -> (a :⊕ b) :⊕ c)
+plus_associative :: (a :⊕ b) :⊕ c :≅ a :⊕ (b :⊕ c)
 plus_associative = (f, g)
   where
     f = either (either Left (Right . Left)) (Right . Right)
@@ -79,13 +85,13 @@ data Top' where
 sink' :: a %1 -> Top'
 sink' = Top'
 
-with_left_identity :: (Top :& a %1 -> a, a %1 -> Top :& a)
+with_left_identity :: Top :& a :≅ a
 with_left_identity = (snd', pair sink id)
 
 with_commutative :: a :& b %1 -> b :& a
 with_commutative = pair snd' fst'
 
-with_associative :: ((a :& b) :& c %1 -> a :& (b :& c), a :& (b :& c) %1 -> (a :& b) :& c)
+with_associative :: (a :& b) :& c :≅ a :& (b :& c)
 with_associative = (f, g)
   where
     f = pair (fst' . fst') (pair (snd' . fst') snd')
