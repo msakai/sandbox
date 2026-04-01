@@ -37,3 +37,7 @@ theorem double_negation_of_contra_equiv (P : Prop)
   intro ht
   contradiction
   constructor
+
+#print axioms double_negation_of_contra_equiv
+
+#check (x : X) → Σ (y : X), PLift (x = y)
