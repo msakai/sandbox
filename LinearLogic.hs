@@ -137,6 +137,15 @@ ofcource_distribute_over_with = (f, g)
     g :: OfCourse a :⊗ OfCourse b %1 -> OfCourse (a :& b)
     g (Ur a, Ur b) = Ur (pair (\() -> a) (\() -> b) ())
 
+ofcource_distribute_over_top :: OfCourse Top :≅ One
+ofcource_distribute_over_top = (f, g)
+  where
+    f :: OfCourse Top %1 -> One
+    f (Ur _) = ()
+
+    g :: One %1 -> OfCourse Top
+    g () = Ur (Top absurd')
+
 -- -------------------------------------------------------------------
 -- TODO: ? (why not)
 -- -------------------------------------------------------------------
