@@ -128,6 +128,15 @@ with_associative = (f, g)
 -- !
 type OfCourse a = Ur a
 
+ofcource_distribute_over_with :: OfCourse (a :& b) :≅ OfCourse a :⊗ OfCourse b
+ofcource_distribute_over_with = (f, g)
+  where
+    f :: OfCourse (a :& b) %1 -> OfCourse a :⊗ OfCourse b
+    f (Ur x) = (Ur (fst' x), Ur (snd' x))
+
+    g :: OfCourse a :⊗ OfCourse b %1 -> OfCourse (a :& b)
+    g (Ur a, Ur b) = Ur (pair (\() -> a) (\() -> b) ())
+
 -- -------------------------------------------------------------------
 -- TODO: ? (why not)
 -- -------------------------------------------------------------------
