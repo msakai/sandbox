@@ -1,0 +1,6 @@
+stack*.yaml.lock
+.stack-work
+dist
+dist-newstyle
+node_modules
+
