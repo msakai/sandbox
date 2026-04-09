@@ -26,7 +26,7 @@ theorem MyNat.add_succ (m n : MyNat) : m + .succ n = .succ (m + n) := by
 
 set_option pp.fieldNotation.generalized false in
 
-example (n : MyNat) : 0 + n = n := by
+theorem MyNat.zero_add (n : MyNat) : 0 + n = n := by
   induction n with
   | zero =>
     guard_target =ₛ 0 + MyNat.zero = MyNat.zero
