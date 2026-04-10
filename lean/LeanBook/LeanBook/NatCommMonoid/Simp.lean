@@ -45,13 +45,14 @@ example (m n : MyNat) : .succ m + n = .succ (m + n) := by
     _ = (m + n').succ.succ := by rw [ih]
 
 example (n : MyNat) : 1 + n = n + 1 := calc
-  _ = .succ 0 + n :=  by rfl
+  _ = .succ 0 + n := by rfl
   _ = .succ (0 + n) := by rw [MyNat.succ_add]
   _ = .succ n := by rw [MyNat.zero_add]
   _ = n + 1 := by rfl
 
 example (n : MyNat) : MyNat.zero.succ.succ + n = (1 + n).succ := by
   rw [MyNat.succ_add]
+  rfl
 
 example (n : MyNat) : 2 + n = n + 2 := calc
   _ = MyNat.zero.succ.succ + n := by rfl
