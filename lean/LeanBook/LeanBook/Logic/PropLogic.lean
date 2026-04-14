@@ -1,3 +1,7 @@
+-- 3.1 命題論理
+
+-- 3.1.1 命題
+
 #check Prop
 
 #check (1 + 1 = 3 : Prop)
@@ -10,6 +14,8 @@
 
 example : True := by trivial
 
+-- 3.1.2 仮定を使う
+
 example (P : Prop) (h : P) : P := by
   exact h
 
@@ -19,6 +25,8 @@ example (P : Prop) (h : P) : P := by
 example (h : False) : ∀ x y z n : Nat,
   n ≥ 3 → x ^ n + y ^ n = z ^ n → x * y * z = 0 := by
   trivial
+
+-- 3.1.3 含意 (→)
 
 example (P Q R : Prop) : (P → Q → R) = (P → (Q → R)) := by
   rfl
@@ -41,6 +49,8 @@ example (P Q : Prop) (h : P → Q) (hp : P) : Q := by
 example (P Q : Prop) (hq : Q) : P → Q := by
   intro hp
   exact hq
+
+-- 3.1.4 否定 (¬)
 
 #eval ¬True
 
@@ -66,6 +76,8 @@ example (P : Prop) (hnp : ¬ P) (hp : P) : False := by
 example (P Q : Prop) (hnp : ¬ P) (hp : P) : Q := by
   exfalso
   contradiction
+
+-- 3.1.5 同値性 (↔)
 
 #eval True ↔ True
 
@@ -113,6 +125,8 @@ example (P Q : Prop) (h : P ↔ Q) (hp : P) : Q := by
 example (P Q : Prop) (h : P ↔ Q) : P = Q := by
   rw[h]
 
+-- 3.1.6 論理積 (∧)
+
 #eval True ∧ True
 
 #eval True ∧ False
@@ -135,6 +149,8 @@ example (P Q : Prop) (h : P ∧ Q) : Q := by
 example (P Q : Prop) (h : P ∧ Q) : P := h.left
 
 example (P Q : Prop) (h : P ∧ Q) : Q := h.right
+
+-- 3.1.7 論理和 (∨)
 
 #eval True ∨ True
 
@@ -217,73 +233,3 @@ example (P Q : Prop) : ¬ (P ∨ Q) ↔ ¬ P ∧ ¬ Q := by
     | inr hq =>
         apply h.right
         exact hq
-
--- 3.2 証明を楽にするコツ
-
-example (P : Prop) : ¬ ¬ ¬ P → ¬ P := by
-  intro hn3p hp
-
-  have hn2p : ¬ ¬ P := by
-    intro hnp
-    contradiction
-
-  contradiction
-
-example (P : Prop) : ¬ ¬ ¬ P → ¬ P := by
-  intro hn3p hp
-
-  have : ¬ ¬ P := by
-    intro hnp
-    contradiction
-
-  guard_hyp this : ¬ ¬ P
-
-  contradiction
-
-example (P : Prop) : ¬ ¬ (P ∨ ¬ P) := by
-  intro h
-
-  suffices hyp : ¬ P from by
-    have : P ∨ ¬ P := by
-      right
-      exact hyp
-
-    contradiction
-
-  guard_target =ₛ ¬ P
-
-  intro hp
-
-  have : P ∨ ¬ P := by
-    left
-    exact hp
-
-  contradiction
-
-example (P : Prop) : (P → True) ↔ True := by
-  -- exact?
-  exact imp_true_iff P
-
-example (P : Prop) : (True → P) ↔ P := by
-  -- exact?
-  exact true_imp_iff
-
-example (P Q : Prop) (h : ¬ P ↔ Q) : (P → False) ↔ Q := by
-  -- exact h
-  rw [show (P → False) ↔ ¬ P from by rfl]
-  rw [h]
-
-example (P : Prop) : ¬ (P ↔ ¬ P) := by
-  intro h
-
-  have : ¬ P := by
-    intro hp
-    apply h.mp
-    exact hp
-    exact hp
-
-  have : P := by
-    apply h.mpr
-    exact this
-
-  contradiction
