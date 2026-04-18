@@ -16,6 +16,4 @@ def idOnNat : Nat → Nat := by?
 
 #eval idOnNat 42
 
-example (P Q : Prop) (hp : P) : Q → P := by?
-  intro hq
-  exact hp
+example (P Q : Prop) (hp : P) : Q → P := fun _ => hp
