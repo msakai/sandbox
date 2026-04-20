@@ -1,4 +1,4 @@
--- import LeanBook.NatCommMonoid.Induction
+-- 4.5 帰納法を改善する
 import LeanBook.NatCommMonoid.AcRfl
 
 example (m n : MyNat) : m + n = n + m := by

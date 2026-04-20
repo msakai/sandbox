@@ -1,3 +1,4 @@
+-- 4.4 足し算の交換法則と結合法則を解放する
 import LeanBook.NatCommMonoid.Simp
 
 theorem MyNat.add_comm (m n : MyNat) : m + n = n + m := by

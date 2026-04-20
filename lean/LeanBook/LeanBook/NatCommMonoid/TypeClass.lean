@@ -1,3 +1,4 @@
+-- 4.1 型クラスで見やすく綺麗に
 import LeanBook.FirstProof.NaturalNumber
 
 def MyNat.ofNat (n : Nat) : MyNat :=

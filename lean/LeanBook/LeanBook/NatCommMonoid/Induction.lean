@@ -1,3 +1,4 @@
+-- 4.2 帰納法で0 + n = n を証明する
 import LeanBook.NatCommMonoid.TypeClass
 
 -- example (n : MyNat) : 0 + n = n := by

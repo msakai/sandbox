@@ -1,3 +1,4 @@
+-- 4.3 等式変形による単純化を自動化する
 import LeanBook.NatCommMonoid.Induction
 
 example (n : MyNat) : 0 + (n + 0) = n := by
