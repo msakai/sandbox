@@ -28,8 +28,10 @@ add m (succ n) = succ (add m n)
 
 -- C-c C-n two
 
-example1 : add one one ≡ two
-example1 = refl
+module _ where
+  private
+    example1 : add one one ≡ two
+    example1 = refl
 
-example2 : (n : MyNat) -> add n zero ≡ n
-example2 n = refl
+    example2 : (n : MyNat) -> add n zero ≡ n
+    example2 n = refl
