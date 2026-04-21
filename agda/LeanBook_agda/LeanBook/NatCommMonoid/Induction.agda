@@ -4,7 +4,7 @@ module LeanBook.NatCommMonoid.Induction where
 open import Function
 open import Relation.Binary.PropositionalEquality
 
-open import LeanBook.NatCommMonoid.TypeClass
+open import LeanBook.NatCommMonoid.TypeClass public
 
 -- example1 : (n : MyNat) → 0 + n ≡ n
 -- example1 = refl
