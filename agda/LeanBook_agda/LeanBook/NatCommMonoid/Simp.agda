@@ -3,7 +3,7 @@ module LeanBook.NatCommMonoid.Simp where
 
 open import Relation.Binary.PropositionalEquality
 
-open import LeanBook.NatCommMonoid.Induction
+open import LeanBook.NatCommMonoid.Induction public
 
 module _ where private
   example : (n : MyNat) → 0 + (n + 0) ≡ n
