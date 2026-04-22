@@ -79,26 +79,28 @@ open import Algebra.Definitions {A = MyNat} _≡_
 
 module _ where private
   import Data.Fin.Base as Fin
-  import Data.Nat as Nat
+  import Data.Fin.Literals as Fin
   open import Data.Vec.Base using ([]; _∷_)
   open import Algebra.Solver.CommutativeMonoid +-0-commutativeMonoid
 
+  instance
+    fin-number : ∀ {n} → Number (Fin.Fin n)
+    fin-number {n} = Fin.number n
+
   example1 : (l m n : MyNat) → l + m + n + 3 ≡ m + (l + n) + 3
   example1 l m n =
-    prove (Nat.suc (Nat.suc (Nat.suc (Nat.suc Nat.zero))))
-          (((x ⊕ y) ⊕ z) ⊕ w) ((y ⊕ (x ⊕ z)) ⊕ w) (l ∷ m ∷ n ∷ 3 ∷ [])
+    prove 4 (((x ⊕ y) ⊕ z) ⊕ w) ((y ⊕ (x ⊕ z)) ⊕ w) (l ∷ m ∷ n ∷ 3 ∷ [])
     where
-      x = var Fin.zero
-      y = var (Fin.suc Fin.zero)
-      z = var (Fin.suc (Fin.suc Fin.zero))
-      w = var (Fin.suc (Fin.suc (Fin.suc Fin.zero)))
+      x = var 0
+      y = var 1
+      z = var 2
+      w = var 3
 
   example2 : (l m n : MyNat) → l + (1 + m) + n ≡ m + (l + n) + 1
   example2 l m n =
-    prove (Nat.suc (Nat.suc (Nat.suc (Nat.suc Nat.zero))))
-          ((x ⊕ (w ⊕ y)) ⊕ z) ((y ⊕ (x ⊕ z)) ⊕ w) (l ∷ m ∷ n ∷ 1 ∷ [])
+    prove 4 ((x ⊕ (w ⊕ y)) ⊕ z) ((y ⊕ (x ⊕ z)) ⊕ w) (l ∷ m ∷ n ∷ 1 ∷ [])
     where
-      x = var Fin.zero
-      y = var (Fin.suc Fin.zero)
-      z = var (Fin.suc (Fin.suc Fin.zero))
-      w = var (Fin.suc (Fin.suc (Fin.suc Fin.zero)))
+      x = var 0
+      y = var 1
+      z = var 2
+      w = var 3

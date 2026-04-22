@@ -1,16 +1,27 @@
 module LeanBook.NatCommMonoid.TypeClass where
 
-open import Data.Unit
+open import Data.Unit public
 import Data.Nat as Nat
+import Data.Nat.Literals as Nat
 open import Relation.Binary.PropositionalEquality
+open import Agda.Builtin.FromNat public
 
 open import LeanBook.FirstProof.NaturalNumber public
 
-fromNat : Nat.ℕ → MyNat
-fromNat Nat.zero = zero
-fromNat (Nat.suc n) = succ (fromNat n)
 
-{-# BUILTIN FROMNAT fromNat #-}
+fromNat′ : Nat.ℕ → MyNat
+fromNat′ Nat.zero = zero
+fromNat′ (Nat.suc n) = succ (fromNat′ n)
+
+instance
+  my-nat-number : Number MyNat
+  my-nat-number = record
+    { Constraint = λ _ → ⊤
+    ; fromNat    = λ n → fromNat′ n
+    }
+
+  nat-number = Nat.number
+
 
 module _ where
   private
@@ -33,8 +44,6 @@ module _ where
     example2 : MyNat
     example2 = zero + one
 
-    -- FIXME: "C-c C-n 1 + 1" だと、数値リテラルが MyNat ではなく Nat.ℕ に解釈されてしまう
-    -- private な定義にしてると、 "C-c C-n example3" とすることも出来ない。
     example3 : MyNat
     example3 = 0 + 0
 
