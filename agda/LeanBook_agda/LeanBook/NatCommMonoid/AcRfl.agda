@@ -5,7 +5,7 @@ open import Data.Product
 open import Level
 open import Relation.Binary.PropositionalEquality
 
-open import LeanBook.NatCommMonoid.Simp
+open import LeanBook.NatCommMonoid.Simp public
 
 add-comm : (m n : MyNat) → m + n ≡ n + m
 add-comm m zero = sym (zero-add m)
