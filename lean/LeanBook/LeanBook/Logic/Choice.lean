@@ -4,7 +4,17 @@
 
 #print axioms Classical.em
 
+#check propext
+
 #check Classical.choice
+
+#check Quot.sound
+
+#print Nonempty
+
+#print Quot
+
+#print Classical.em
 
 def Surjective {X Y : Type} (f : X → Y) : Prop :=
   ∀ y : Y, ∃ x : X, f x = y
