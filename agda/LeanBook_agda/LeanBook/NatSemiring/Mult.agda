@@ -8,7 +8,7 @@ open import Level using (0ℓ)
 open import Data.Product
 open import Data.Vec.Base using ([]; _∷_)
 
-open import LeanBook.NatCommMonoid.BetterInduction
+open import LeanBook.NatCommMonoid.BetterInduction public
 
 open ≡-Reasoning
 
