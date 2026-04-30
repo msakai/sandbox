@@ -24,7 +24,13 @@ open import Algebra.Definitions {A = MyNat} _≡_
 +-*-isSemiring : IsSemiring _+_ _*_ 0 1
 +-*-isSemiring =
   record
-  { isSemiringWithoutAnnihilatingZero = +-*-isSemiringWithoutAnnihilatingZero
+  { isSemiringWithoutAnnihilatingZero =   record
+    { +-isCommutativeMonoid = +-0-isCommutativeMonoid
+    ; *-cong = cong₂ _*_
+    ; *-assoc = mul-assoc
+    ; *-identity = (one-mul , mul-one)
+    ; distrib = (mul-add , (λ x y z → add-mul y z x))
+    }
   ; zero = (zero-mul , mul-zero)
   }
 
@@ -35,20 +41,8 @@ open import Algebra.Definitions {A = MyNat} _≡_
   ; *-comm = mul-comm
   }
 
-+-*-SemiringWithoutAnnihilatingZero : SemiringWithoutAnnihilatingZero 0ℓ 0ℓ
-+-*-SemiringWithoutAnnihilatingZero =
-  record
-  { Carrier = MyNat
-  ; _≈_ = _≡_
-  ; _+_ = _+_
-  ; _*_ = _*_
-  ; 0# = 0
-  ; 1# = 1
-  ; isSemiringWithoutAnnihilatingZero = +-*-isSemiringWithoutAnnihilatingZero
-  }
-
-+-*-Semiring : Semiring 0ℓ 0ℓ
-+-*-Semiring =
++-*-semiring : Semiring 0ℓ 0ℓ
++-*-semiring =
   record
   { Carrier = MyNat
   ; _≈_ = _≡_
@@ -59,8 +53,8 @@ open import Algebra.Definitions {A = MyNat} _≡_
   ; isSemiring = +-*-isSemiring
   }
 
-+-*-CommutativeSemiring : CommutativeSemiring 0ℓ 0ℓ
-+-*-CommutativeSemiring =
++-*-commutativeSemiring : CommutativeSemiring 0ℓ 0ℓ
++-*-commutativeSemiring =
   record
   { Carrier = MyNat
   ; _≈_ = _≡_
@@ -71,13 +65,12 @@ open import Algebra.Definitions {A = MyNat} _≡_
   ; isCommutativeSemiring = +-*-isCommutativeSemiring
   }
 
-
 -- 5.2.1 ステップ1：rw ではなくsimp を使う
 
 -- 5.2.2 ステップ2：マクロでタクティクを作る
 
 module _ where private
-  open import Algebra.Solver.Ring.NaturalCoefficients.Default +-*-CommutativeSemiring
+  open import Algebra.Solver.Ring.NaturalCoefficients.Default +-*-commutativeSemiring
   open ≡-Reasoning
   import Data.Nat as Nat
 
