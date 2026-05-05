@@ -5,7 +5,7 @@ open import Data.Product
 open import Level
 open import Relation.Binary.PropositionalEquality
 
-open import LeanBook.NatSemiring.Mult
+open import LeanBook.NatSemiring.Mult public
 
 open import Algebra.Bundles
 open import Algebra.Structures {A = MyNat} _≡_
