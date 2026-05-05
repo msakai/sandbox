@@ -1,4 +1,4 @@
--- 6.1 a + b = a + c→ b = c を証明する
+-- 6.1 a + b = a + c → b = c を証明する
 import LeanBook.NatSemiring.Distrib
 
 -- 6.1.1 ペアノの公理再び
