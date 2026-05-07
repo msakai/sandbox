@@ -36,3 +36,72 @@ def MyNat.le.recAux {n b : MyNat}
   | refl => exact refl
   | @step c h ih =>
     exact step (a := h) ih
+
+-- 6.2.3 反射律と推移律を示す
+
+theorem MyNat.le_refl (n : MyNat) : n ≤ n := by
+  exact MyNat.le.refl
+
+variable {m n k : MyNat}
+
+theorem MyNat.le_step (h : n ≤ m) : n ≤ m + 1 := by
+  exact MyNat.le.step h
+
+theorem MyNat.le_trans (hnm : n ≤ m) (hmk : m ≤ k) : n ≤ k := by
+  induction hmk with
+  | refl => exact hnm
+  | @step k hmk ih =>
+      apply MyNat.le_step
+      apply ih
+
+attribute [refl] MyNat.le_refl
+
+theorem MyNat.le_add_one_right (n : MyNat) : n ≤ n + 1 := by
+  apply MyNat.le_step
+  rfl
+
+instance : Trans (·≤· : MyNat → MyNat → Prop) (·≤·) (·≤·) where
+  trans := MyNat.le_trans
+
+theorem MyNat.le_add_one_left (n : MyNat) : n ≤ 1 + n := calc
+  _ ≤ n + 1 := by apply le_add_one_right
+  _ = 1 + n := by ac_rfl
+
+attribute [simp] MyNat.le_refl MyNat.le_add_one_right MyNat.le_add_one_left
+
+-- 6.2.4 順序関係を和の等式に書き換える
+
+theorem MyNat.le.dest (h : n ≤ m) : ∃ k, n + k = m := by
+  induction h with
+  | refl => exists 0
+  | @step l h ih =>
+     obtain ⟨k, ih⟩ := ih
+     exists k + 1
+     rw [← ih]
+     ac_rfl
+
+theorem MyNat.le_add_right (n m : MyNat) : n ≤ n + m := by
+  induction m with
+  | zero => rfl
+  | succ m ih =>
+      rw [show n + (m + 1) = (n + m) + 1 from by ac_rfl]
+      exact MyNat.le_step ih
+
+theorem MyNat.le.intro (h : n + k = m) : n ≤ m := by
+  rw [← h]
+  induction k with
+  | zero => rfl
+  | succ k ih => apply MyNat.le_add_right
+
+theorem MyNat.le_iff_add : n ≤ m ↔ ∃ k, n + k = m := by
+  constructor <;> intro h
+  case mp => exact MyNat.le.dest h
+  case mpr =>
+    obtain ⟨k, h⟩ := h
+    exact MyNat.le.intro h
+
+-- 6.2.5 練習問題（回答は203 ページ）
+
+example : 1 ≤ 4 := by
+  rw [MyNat.le_iff_add]
+  exists 3
