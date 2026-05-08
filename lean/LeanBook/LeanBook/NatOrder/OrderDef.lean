@@ -89,9 +89,7 @@ theorem MyNat.le_add_right (n m : MyNat) : n ≤ n + m := by
 
 theorem MyNat.le.intro (h : n + k = m) : n ≤ m := by
   rw [← h]
-  induction k with
-  | zero => rfl
-  | succ k ih => apply MyNat.le_add_right
+  apply MyNat.le_add_right
 
 theorem MyNat.le_iff_add : n ≤ m ↔ ∃ k, n + k = m := by
   constructor <;> intro h
@@ -103,5 +101,4 @@ theorem MyNat.le_iff_add : n ≤ m ↔ ∃ k, n + k = m := by
 -- 6.2.5 練習問題（回答は203 ページ）
 
 example : 1 ≤ 4 := by
-  rw [MyNat.le_iff_add]
-  exists 3
+  exact MyNat.le_add_right 1 3
