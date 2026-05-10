@@ -1,4 +1,5 @@
 -- 6.2 順序を定義する
+{-# OPTIONS --allow-unsolved-metas #-}
 module LeanBook.NatOrder.OrderDef where
 
 open import Function
