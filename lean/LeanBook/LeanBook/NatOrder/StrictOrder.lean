@@ -77,9 +77,10 @@ theorem MyNat.lt_or_ge (a b : MyNat) : a < b ∨ b ≤ a := by
   | zero => right; apply MyNat.zero_le
   | succ b ih =>
       cases ih with
-      | inl lt => left; calc
-          _ ≤ b := by exact lt
-          _ ≤ b + 1 := by apply MyNat.le_add_one_right
+      | inl lt =>
+          left
+          apply MyNat.le_succ_monotone
+          exact MyNat.le_of_lt lt
       | inr ge =>
           rw [MyNat.le_iff_eq_or_lt] at ge
           cases ge with
