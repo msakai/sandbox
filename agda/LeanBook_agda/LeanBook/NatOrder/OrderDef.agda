@@ -4,8 +4,12 @@ module LeanBook.NatOrder.OrderDef where
 
 open import Function
 open import Data.Product
+open import Level using (0ℓ)
 import Relation.Binary.PropositionalEquality as Eq
 open import Relation.Binary.PropositionalEquality using (_≡_)
+import Relation.Binary.PropositionalEquality.Properties
+open import Relation.Binary using (_⇒_)
+open import Relation.Binary.Bundles
 
 open import LeanBook.NatOrder.AddCancel public
 
@@ -36,6 +40,9 @@ module _ where private
 
 -- 6.2.3 反射律と推移律を示す
 
+≤-reflexive : _≡_ ⇒ _≤_
+≤-reflexive {m} {.m} Eq.refl = ≤-refl
+
 ≤-trans : {m n k : MyNat} → m ≤ n → n ≤ k → m ≤ k
 ≤-trans m≤n ≤-refl = m≤n
 ≤-trans m≤n (≤-step {k} n≤k) = ≤-step (≤-trans m≤n n≤k)
@@ -45,6 +52,20 @@ module _ where private
 
 ≤-add-one-left : (n : MyNat) → n ≤ 1 + n
 ≤-add-one-left n = Eq.subst (λ x → n ≤ x) (add-comm n 1) (≤-add-one-right n)
+
+open import Relation.Binary.Structures {A = MyNat} _≡_
+
+≤-isPreorder : IsPreorder _≤_
+≤-isPreorder = record
+  { isEquivalence = Relation.Binary.PropositionalEquality.Properties.isEquivalence
+  ; reflexive = ≤-reflexive
+  ; trans = ≤-trans
+  }
+
+≤-preorder : Preorder 0ℓ 0ℓ 0ℓ
+≤-preorder = record
+  { isPreorder = ≤-isPreorder
+  }
 
 -- 6.2.4 順序関係を和の等式に書き換える
 
