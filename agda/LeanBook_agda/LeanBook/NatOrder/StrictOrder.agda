@@ -80,7 +80,7 @@ lt-of-not-le {a} {b} a≰b with lt-or-ge b a
 
 not-le-of-lt : {a b : MyNat} → a < b → ¬ b ≤ a
 not-le-of-lt {a} {b} a<b b≤a with ≤-dest a<b | ≤-dest b≤a
-... | (k , a+1+k≡b) | (l , b+l≡a) = ⊥-elim lem4
+... | (k , a+1+k≡b) | (l , b+l≡a) with lem3
   where
     open ≡-Reasoning
 
@@ -99,10 +99,7 @@ not-le-of-lt {a} {b} a<b b≤a with ≤-dest a<b | ≤-dest b≤a
 
     lem3 : l + k + 1 ≡ 0
     lem3 = add-left-cancel b (l + k + 1) 0 (trans lem2 lem1)
-
-    lem4 : ⊥
-    lem4 with lem3
-    ... | ()
+... | ()
 
 le-total : (a b : MyNat) → a ≤ b ⊎ b ≤ a
 le-total a b with lt-or-ge a b
