@@ -10,7 +10,7 @@ open import Relation.Binary.PropositionalEquality
 open import Relation.Nullary.Negation
 open import LeanBook.NatOrder.OrdMonoid
 
-import Relation.Binary.Reasoning.Preorder (≤-preorder) as ≤-Reasoning
+import Relation.Binary.Reasoning.Preorder (≤-preorder) as ≤-Reasoning′
 
 -- 6.6.1 狭義順序と広義順序の推移律
 
@@ -24,7 +24,7 @@ private variable
   m + 1 ≲⟨ h₂ ⟩
   k
   ∎
-  where open ≤-Reasoning
+  where open ≤-Reasoning′
 
 ≤-<-trans : n ≤ m → m < k → n < k
 ≤-<-trans {n = n} {m = m} {k = k} h₁ h₂ = begin
@@ -32,7 +32,7 @@ private variable
   m + 1 ≲⟨ h₂ ⟩
   k
   ∎
-  where open ≤-Reasoning
+  where open ≤-Reasoning′
 
 <-≤-trans : n < m → m ≤ k → n < k
 <-≤-trans {n = n} {m = m} {k = k} h₁ h₂ = begin
@@ -40,7 +40,7 @@ private variable
   m ≲⟨ h₂ ⟩
   k
   ∎
-  where open ≤-Reasoning
+  where open ≤-Reasoning′
 
 -- 6.6.2 狭義順序の非反射律
 <-irrefl : (n : MyNat) → n ≮ n
@@ -71,7 +71,7 @@ private variable
       m₁ + 1  ≲⟨ h₂ ⟩
       n
       ∎
-      where open ≤-Reasoning
+      where open ≤-Reasoning′
 ... | ()
 
 ≤-isPartialOrder : IsPartialOrder _≡_ _≤_
@@ -91,3 +91,30 @@ module _ where private
   example : (a b : MyNat) → (a < b ⊎ a ≡ b) → a ≤ b
   example a b (inj₁ a<b) = ≤-trans (≤-step ≤-refl) a<b
   example a b (inj₂ refl) = ≤-refl
+
+-- ≤-Reasoning
+
+<-asym : n < m → n ≯ m
+<-asym n<m m<n = <⇒≱ n<m (<⇒≤ m<n)
+
+module ≤-Reasoning where
+  open import Relation.Binary.Reasoning.Base.Triple
+    ≤-isPreorder
+    <-asym
+    <-trans
+    (resp₂ _<_)
+    <⇒≤
+    <-≤-trans
+    ≤-<-trans
+    public
+    hiding (step-≈; step-≈˘; step-≈-⟩; step-≈-⟨)
+
+module _ where private
+  example : (a b c d : MyNat) → a < b → b ≡ c → c ≤ d → a < d
+  example a b c d a<b b≡c c≤d = begin-strict
+    a <⟨ a<b ⟩ 
+    b ≡⟨ b≡c ⟩
+    c ≤⟨ c≤d ⟩
+    d
+    ∎
+    where open ≤-Reasoning
