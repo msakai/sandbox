@@ -13,10 +13,19 @@ open import LeanBook.NatOrder.OrderDef public
 
 -- 6.3.1 狭義順序の定義
 
-infix 4 _<_
+infix 4 _<_ _>_ _≮_ _≯_
 
 _<_ : (m n : MyNat) → Set
 m < n = m + 1 ≤ n
+
+_>_ : (m n : MyNat) → Set
+m > n = n < m
+
+_≮_ : (m n : MyNat) → Set
+m ≮ n = ¬ m < n
+
+_≯_ : (m n : MyNat) → Set
+m ≯ n = n ≮ m
 
 module _ where private
   example : (m n : MyNat) → m < n ⇔ (m + 1) ≤ n
@@ -55,31 +64,31 @@ eq-or-lt-of-le : {m n : MyNat} → n ≤ m → n ≡ m ⊎ n < m
 eq-or-lt-of-le ≤-refl = inj₁ refl
 eq-or-lt-of-le (≤-step h) = inj₂ (le-succ-monotone h)
 
-le-of-lt : {a b : MyNat} → a < b → a ≤ b
-le-of-lt {a} a<b = ≤-trans (≤-add-one-right a) a<b
+<⇒≤ : {a b : MyNat} → a < b → a ≤ b
+<⇒≤ {a} a<b = ≤-trans (≤-add-one-right a) a<b
 
 le-of-eq-or-lt : {m n : MyNat} → (n ≡ m ⊎ n < m) → n ≤ m
 le-of-eq-or-lt (inj₁ refl) = ≤-refl
-le-of-eq-or-lt (inj₂ n<m) = le-of-lt n<m
+le-of-eq-or-lt (inj₂ n<m) = <⇒≤ n<m
 
 le-iff-eq-or-lt : {m n : MyNat} → (n ≤ m) ⇔ (n ≡ m ⊎ n < m)
 le-iff-eq-or-lt = mk⇔ eq-or-lt-of-le le-of-eq-or-lt
 
-lt-or-ge : (a b : MyNat) → a < b ⊎ b ≤ a
+lt-or-ge : (a b : MyNat) → a < b ⊎ a ≥ b
 lt-or-ge a zero = inj₂ (zero-le a)
 lt-or-ge a (succ b) with lt-or-ge a b
-... | inj₁ a<b = inj₁ (le-succ-monotone (le-of-lt a<b))
+... | inj₁ a<b = inj₁ (le-succ-monotone (<⇒≤ a<b))
 ... | inj₂ b≤a with eq-or-lt-of-le b≤a
 ...   | inj₁ refl = inj₁ ≤-refl
 ...   | inj₂ b<a  = inj₂ b<a
 
-lt-of-not-le : {a b : MyNat} → (¬ a ≤ b) → b < a
-lt-of-not-le {a} {b} a≰b with lt-or-ge b a
+≰⇒> : {a b : MyNat} → a ≰ b → a > b
+≰⇒> {a} {b} a≰b with lt-or-ge b a
 ... | inj₁ b<a = b<a
-... | inj₂ a≤b = ⊥-elim (a≰b a≤b)
+... | inj₂ b≥a = ⊥-elim (a≰b b≥a)
 
-not-le-of-lt : {a b : MyNat} → a < b → ¬ b ≤ a
-not-le-of-lt {a} {b} a<b b≤a with ≤-dest a<b | ≤-dest b≤a
+<⇒≱ : {a b : MyNat} → a < b → a ≱ b
+<⇒≱ {a} {b} a<b b≤a with ≤-dest a<b | ≤-dest b≤a
 ... | (k , a+1+k≡b) | (l , b+l≡a) with lem3
   where
     open ≡-Reasoning
@@ -103,14 +112,14 @@ not-le-of-lt {a} {b} a<b b≤a with ≤-dest a<b | ≤-dest b≤a
 
 le-total : (a b : MyNat) → a ≤ b ⊎ b ≤ a
 le-total a b with lt-or-ge a b
-... | inj₁ a<b = inj₁ (le-of-lt a<b)
+... | inj₁ a<b = inj₁ (<⇒≤ a<b)
 ... | inj₂ b≤a = inj₂ b≤a
 
 -- 6.3.3 練習問題（回答は203 ページ）
 
 module _ where private
-  example1 : (a : MyNat) → ¬ (a ≡ a + 1)
+  example1 : (a : MyNat) → a ≢ a + 1
   example1 a ()
 
-  example2 : (n : MyNat) → ¬ n + 1 ≤ n
-  example2 n n+1≤n = not-le-of-lt n+1≤n ≤-refl
+  example2 : (n : MyNat) → n ≮ n
+  example2 n n<n = <⇒≱ n<n ≤-refl

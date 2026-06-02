@@ -10,16 +10,26 @@ open import Relation.Binary.PropositionalEquality using (_≡_)
 import Relation.Binary.PropositionalEquality.Properties
 open import Relation.Binary using (_⇒_)
 open import Relation.Binary.Bundles
+open import Relation.Nullary
 
 open import LeanBook.NatOrder.AddCancel public
 
 -- 6.2.1 順序関係を帰納的に定義する
 
-infix 4 _≤_
+infix 4 _≤_ _≰_ _≥_ _≱_
 
 data _≤_ (n : MyNat) : MyNat → Set where
   ≤-refl : n ≤ n
   ≤-step : {m : MyNat} → n ≤ m → n ≤ (m + 1)
+
+_≥_ : MyNat → MyNat → Set
+a ≥ b = b ≤ a
+
+_≰_ : MyNat → MyNat → Set
+a ≰ b = ¬ a ≤ b
+
+_≱_ : MyNat → MyNat → Set
+a ≱ b = b ≰ a
 
 -- 6.2.2 帰納型では帰納法が使える
 

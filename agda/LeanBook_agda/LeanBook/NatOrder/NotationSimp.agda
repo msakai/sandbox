@@ -14,7 +14,7 @@ lt-def = mk⇔ id id
 -- 6.4.2 simp ラッパーを作成する
 
 module _ where private
-  example : (m n : MyNat) → (m < n) → m + 1 ≤ n
+  example : (m n : MyNat) → m < n → m + 1 ≤ n
   example m n h = h
 
 -- 6.4.3 notation_simp? を定義する
@@ -22,10 +22,10 @@ module _ where private
 -- 6.4.4 練習問題 （回答は204 ページ）
 
 module _ where private
-  example : (a b : MyNat) → (a < b) → ¬ (b < a)
-  example a b h1 h2 = h3 h4
+  example : (a b : MyNat) → a < b → a ≯ b
+  example a b a<b a>b = a≱b a≥b
     where
-      h3 : ¬ b ≤ a
-      h3 = not-le-of-lt h1
-      h4 : b ≤ a
-      h4 = le-of-lt h2
+      a≱b : a ≱ b
+      a≱b = <⇒≱ a<b
+      a≥b : a ≥ b
+      a≥b = <⇒≤ a>b

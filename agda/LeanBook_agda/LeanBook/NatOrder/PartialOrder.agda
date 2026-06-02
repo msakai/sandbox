@@ -43,7 +43,7 @@ private variable
   where open ≤-Reasoning
 
 -- 6.6.2 狭義順序の非反射律
-<-irrefl : (n : MyNat) → ¬ n < n
+<-irrefl : (n : MyNat) → n ≮ n
 <-irrefl n n<n with ≤-dest n<n
 ... | (k , n+1+k≡n) with add-left-cancel n (succ k) zero lem
   where
@@ -63,7 +63,7 @@ private variable
 
 ≤-antisym : n ≤ m →  m ≤ n → n ≡ m
 ≤-antisym ≤-refl h₂ = refl
-≤-antisym {n = n} {m = .succ m₁} (≤-step {m₁} n≤m₁) h₂ with not-le-of-lt lem ≤-refl
+≤-antisym {n = n} {m = .succ m₁} (≤-step {m₁} n≤m₁) h₂ with <⇒≱ lem ≤-refl
   where
     lem : n < n
     lem = begin
