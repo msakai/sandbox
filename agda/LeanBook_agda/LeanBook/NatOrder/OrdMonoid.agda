@@ -23,18 +23,18 @@ private variable
   where open ≡-Reasoning
 
 +-monoˡ-≤ : (m ≤ n) → (l : MyNat) → m + l ≤ n + l
-+-monoˡ-≤ {m = m} {n = n} h l = begin
++-monoˡ-≤ {m = m} {n = n} m≤n l = begin
   m + l ≈⟨ add-comm m l ⟩
-  l + m ≲⟨ +-monoʳ-≤ h l ⟩
+  l + m ≲⟨ +-monoʳ-≤ m≤n l ⟩
   l + n ≈⟨ add-comm l n ⟩
   n + l
   ∎
   where open ≤-Reasoning
 
 +-mono-≤ : m ≤ n → a ≤ b → m + a ≤ n + b
-+-mono-≤ {m = m} {n = n} {a = a} {b = b} h1 h2 = begin
-  m + a ≲⟨ +-monoʳ-≤ h2 m ⟩
-  m + b ≲⟨ +-monoˡ-≤ h1 b ⟩
++-mono-≤ {m = m} {n = n} {a = a} {b = b} m≤n a≤b = begin
+  m + a ≲⟨ +-monoʳ-≤ a≤b m ⟩
+  m + b ≲⟨ +-monoˡ-≤ m≤n b ⟩
   n + b
   ∎
   where open ≤-Reasoning
@@ -94,10 +94,8 @@ le-of-add-le-iff-right {k = k} = mk⇔ +-cancelʳ-≤ (λ h → +-monoˡ-≤ h k
 module _ where private
   example : (m₁ m₂ n₁ n₂ l₁ l₂ : MyNat) → m₁ ≤ m₂ → n₁ ≤ n₂ → l₁ ≤ l₂ → l₁ + m₁ + n₁ ≤ l₂ + n₂ + m₂
   example m₁ m₂ n₁ n₂ l₁ l₂ h1 h2 h3 = begin
-    l₁ + m₁ + n₁ ≲⟨ +-monoʳ-≤ h2 (l₁ + m₁) ⟩
-    l₁ + m₁ + n₂ ≲⟨ +-monoˡ-≤ (+-monoʳ-≤ h1 l₁) n₂ ⟩
-    l₁ + m₂ + n₂ ≲⟨ +-monoˡ-≤ (+-monoˡ-≤ h3 m₂) n₂ ⟩
-    l₂ + m₂ + n₂ ≈⟨ add-assoc l₂ m₂ n₂ ⟩
+    l₁ + m₁ + n₁   ≲⟨ +-mono-≤ (+-mono-≤ h3 h1) h2 ⟩
+    l₂ + m₂ + n₂   ≈⟨ add-assoc l₂ m₂ n₂ ⟩
     l₂ + (m₂ + n₂) ≈⟨ cong (λ x → l₂ + x) (add-comm m₂ n₂) ⟩
     l₂ + (n₂ + m₂) ≈⟨ sym (add-assoc l₂ n₂ m₂) ⟩
     l₂ + n₂ + m₂
