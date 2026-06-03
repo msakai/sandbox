@@ -8,8 +8,8 @@ open import LeanBook.NatOrder.StrictOrder public
 
 -- 6.4.1 simp による方法
 
-lt-def : {m n : MyNat} → m < n ⇔ m + 1 ≤ n
-lt-def = mk⇔ id id
+<-def : {m n : MyNat} → m < n ⇔ m + 1 ≤ n
+<-def = mk⇔ id id
 
 -- 6.4.2 simp ラッパーを作成する
 

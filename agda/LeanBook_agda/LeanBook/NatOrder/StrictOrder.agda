@@ -33,57 +33,57 @@ module _ where private
 
 -- 6.3.2 狭義順序と広義順序、等号の関係
 
-one-neq-zero : (MyNat ∋ 1) ≢ 0
-one-neq-zero ()
+1≢0 : (MyNat ∋ 1) ≢ 0
+1≢0 ()
 
-zero-neq-one : (MyNat ∋ 0) ≢ 1
-zero-neq-one ()
+0≢1 : (MyNat ∋ 0) ≢ 1
+0≢1 ()
 
-zero-le : (n : MyNat) → 0 ≤ n
-zero-le n = ≤-intro (zero-add n)
+0≤n : {n : MyNat} → 0 ≤ n
+0≤n {n} = ≤-intro (zero-add n)
 
-zero-of-le-zero : {n : MyNat} (h : n ≤ 0) → n ≡ 0
-zero-of-le-zero ≤-refl = refl
+n≤0⇒n≡0 : {n : MyNat} (h : n ≤ 0) → n ≡ 0
+n≤0⇒n≡0 ≤-refl = refl
 
-le-zero : {n : MyNat} → n ≤ 0 ⇔ n ≡ 0
-le-zero {n} = mk⇔ zero-of-le-zero from
+n≤0⇔n≡0 : {n : MyNat} → n ≤ 0 ⇔ n ≡ 0
+n≤0⇔n≡0 {n} = mk⇔ n≤0⇒n≡0 from
   where
     from : n ≡ 0 → n ≤ 0
     from refl = ≤-refl
 
 -- これは書籍にはなかった定理
-le-succ-monotone : {n m : MyNat} → n ≤ m → succ n ≤ succ m
-le-succ-monotone ≤-refl = ≤-refl
-le-succ-monotone (≤-step h) = ≤-step (le-succ-monotone h)
+s≤s : {n m : MyNat} → n ≤ m → succ n ≤ succ m
+s≤s ≤-refl = ≤-refl
+s≤s (≤-step h) = ≤-step (s≤s h)
 
-eq-zero-or-pos : (n : MyNat) → n ≡ 0 ⊎ 0 < n
-eq-zero-or-pos zero = inj₁ refl
-eq-zero-or-pos (succ n) = inj₂ (le-succ-monotone (zero-le n))
+n≡0∨0<n : (n : MyNat) → n ≡ 0 ⊎ 0 < n
+n≡0∨0<n zero = inj₁ refl
+n≡0∨0<n (succ n) = inj₂ (s≤s 0≤n)
 
-eq-or-lt-of-le : {m n : MyNat} → n ≤ m → n ≡ m ⊎ n < m
-eq-or-lt-of-le ≤-refl = inj₁ refl
-eq-or-lt-of-le (≤-step h) = inj₂ (le-succ-monotone h)
+m≤n⇒m≡n∨m<n : {m n : MyNat} → m ≤ n → m ≡ n ⊎ m < n
+m≤n⇒m≡n∨m<n ≤-refl = inj₁ refl
+m≤n⇒m≡n∨m<n (≤-step h) = inj₂ (s≤s h)
 
 <⇒≤ : {a b : MyNat} → a < b → a ≤ b
 <⇒≤ {a} a<b = ≤-trans (≤-add-one-right a) a<b
 
-le-of-eq-or-lt : {m n : MyNat} → (n ≡ m ⊎ n < m) → n ≤ m
-le-of-eq-or-lt (inj₁ refl) = ≤-refl
-le-of-eq-or-lt (inj₂ n<m) = <⇒≤ n<m
+m≡n∨m<n⇒m≤n : {m n : MyNat} → (m ≡ n ⊎ m < n) → m ≤ n
+m≡n∨m<n⇒m≤n (inj₁ refl) = ≤-refl
+m≡n∨m<n⇒m≤n (inj₂ m<n) = <⇒≤ m<n
 
-le-iff-eq-or-lt : {m n : MyNat} → (n ≤ m) ⇔ (n ≡ m ⊎ n < m)
-le-iff-eq-or-lt = mk⇔ eq-or-lt-of-le le-of-eq-or-lt
+m≤n⇔m≡n∨m<n : {m n : MyNat} → (m ≤ n) ⇔ (m ≡ n ⊎ m < n)
+m≤n⇔m≡n∨m<n = mk⇔ m≤n⇒m≡n∨m<n m≡n∨m<n⇒m≤n
 
-lt-or-ge : (a b : MyNat) → a < b ⊎ a ≥ b
-lt-or-ge a zero = inj₂ (zero-le a)
-lt-or-ge a (succ b) with lt-or-ge a b
-... | inj₁ a<b = inj₁ (le-succ-monotone (<⇒≤ a<b))
-... | inj₂ b≤a with eq-or-lt-of-le b≤a
+m<n∨m≥n : (a b : MyNat) → a < b ⊎ a ≥ b
+m<n∨m≥n a zero = inj₂ 0≤n
+m<n∨m≥n a (succ b) with m<n∨m≥n a b
+... | inj₁ a<b = inj₁ (s≤s (<⇒≤ a<b))
+... | inj₂ b≤a with m≤n⇒m≡n∨m<n b≤a
 ...   | inj₁ refl = inj₁ ≤-refl
 ...   | inj₂ b<a  = inj₂ b<a
 
 ≰⇒> : {a b : MyNat} → a ≰ b → a > b
-≰⇒> {a} {b} a≰b with lt-or-ge b a
+≰⇒> {a} {b} a≰b with m<n∨m≥n b a
 ... | inj₁ b<a = b<a
 ... | inj₂ b≥a = ⊥-elim (a≰b b≥a)
 
@@ -110,8 +110,8 @@ lt-or-ge a (succ b) with lt-or-ge a b
     lem3 = add-left-cancel b (l + k + 1) 0 (trans lem2 lem1)
 ... | ()
 
-le-total : (a b : MyNat) → a ≤ b ⊎ b ≤ a
-le-total a b with lt-or-ge a b
+m≤n∨m≥n : (a b : MyNat) → a ≤ b ⊎ a ≥ b
+m≤n∨m≥n a b with m<n∨m≥n a b
 ... | inj₁ a<b = inj₁ (<⇒≤ a<b)
 ... | inj₂ b≤a = inj₂ b≤a
 

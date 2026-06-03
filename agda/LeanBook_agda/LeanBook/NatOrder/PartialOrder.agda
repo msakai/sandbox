@@ -28,7 +28,7 @@ private variable
 
 ≤-<-trans : n ≤ m → m < k → n < k
 ≤-<-trans {n = n} {m = m} {k = k} h₁ h₂ = begin
-  n + 1 ≲⟨ add-le-add-right h₁ 1 ⟩
+  n + 1 ≲⟨ +-monoˡ-≤ h₁ 1 ⟩
   m + 1 ≲⟨ h₂ ⟩
   k
   ∎
@@ -67,7 +67,7 @@ private variable
   where
     lem : n < n
     lem = begin
-      n + 1   ≲⟨ add-le-add-right n≤m₁ 1 ⟩
+      n + 1   ≲⟨ +-monoˡ-≤ n≤m₁ 1 ⟩
       m₁ + 1  ≲⟨ h₂ ⟩
       n
       ∎
