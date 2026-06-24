@@ -78,3 +78,45 @@ theorem MyNat.le_impl (m n : MyNat) : MyNat.ble m n = true ↔ m ≤ n := by
   | case3 m n ih =>
       -- テキストではここで dsimp [MyNat.ble]　が使われているが、効果がない
       simp [ih]
+
+-- 6.7.5 順序関係を決定可能にする
+
+#check DecidableLE
+
+#check decidable_of_iff
+
+instance : DecidableLE MyNat := fun n m =>
+  decidable_of_iff (MyNat.ble n m = true) (MyNat.le_impl n m)
+
+#eval 1 ≤ 3
+
+#eval 12 ≤ 13
+
+example : 1 ≤ 9 := by
+  decide
+
+example : 32 ≤ 47 := by
+  decide
+
+example : 2 ≤ 1 := by
+  -- decide
+  -- tactic 'decide' proved that the proposition
+  --   fail_if_success2 ≤ 1
+  -- is false
+  fail_if_success decide
+  sorry
+
+theorem MyNat.lt_impl (m n : MyNat) : MyNat.ble (m + 1) n ↔ m < n := by
+  rw [MyNat.le_impl]
+  rfl
+
+instance : DecidableLT MyNat := fun n m =>
+  decidable_of_iff (MyNat.ble (n + 1) m = true) (MyNat.lt_impl n m)
+
+example : 1 < 4 := by
+  decide
+
+-- 6.7.6 練習問題
+
+example : 23 < 32 ∧ 12 ≤ 24 := by
+  decide
