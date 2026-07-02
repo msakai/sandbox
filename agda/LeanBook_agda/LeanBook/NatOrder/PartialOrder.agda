@@ -8,7 +8,7 @@ open import Level using (0ℓ)
 open import Relation.Binary using (IsPartialOrder; Poset)
 open import Relation.Binary.PropositionalEquality
 open import Relation.Nullary.Negation
-open import LeanBook.NatOrder.OrdMonoid
+open import LeanBook.NatOrder.OrdMonoid public
 
 import Relation.Binary.Reasoning.Preorder (≤-preorder) as ≤-Reasoning′
 

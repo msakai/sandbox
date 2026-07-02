@@ -1,6 +1,6 @@
 module LeanBook.NatCommMonoid.TypeClass where
 
-open import Data.Unit public
+open import Data.Unit.Base public
 import Data.Nat as Nat
 import Data.Nat.Literals as Nat
 open import Relation.Binary.PropositionalEquality
