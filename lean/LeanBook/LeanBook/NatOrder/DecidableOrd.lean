@@ -21,6 +21,9 @@ example : 32 + 13 ≠ 46 := by
   decide
 
 #eval 1 ≠ 2
+
+-- 6.7.3 順序関係を計算する
+
 def MyNat.ble (a b : MyNat) : Bool :=
   match a, b with
   | 0, _ => true
