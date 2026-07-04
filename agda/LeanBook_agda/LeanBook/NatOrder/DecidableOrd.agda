@@ -113,15 +113,12 @@ succ x ≤ᵇ succ y = _≤ᵇ_ x y
 infix 4 _≤?_ _≥?_
 
 _≤?_ : Decidable _≤_
-m ≤? n = map′ (≤ᵇ⇒≤ m n) (≤⇒≤ᵇ m n) (T? (m ≤ᵇ n))
+m ≤? n = (m ≤ᵇ n) because (≤ᵇ-reflects-≤ m n)
 
 _≥?_ : Decidable _≥_
 _≥?_ = flip _≤?_
 
 -- C-c C-n 1 ≤? 3
--- ⇒ map′ (λ h → ≤-step (≤-step ≤-refl)) (≤⇒≤ᵇ (succ zero) (succ (succ (succ zero)))) (yes tt)
--- map′ が copattern 定義なので簡約がここで止まり、パターンマッチ時には no の clause を省略できないので注意。
--- ただし、 from-yes / from-no を用いることはできる。
 
 -- C-c C-n 12 ≤? 13
 
