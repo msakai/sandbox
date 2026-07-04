@@ -35,8 +35,7 @@ succ x ≟ succ y with x ≟ y
 
 module _ where private
   example : 32 + 13 ≢ 46
-  example with 32 + 13 ≟ 46
-  ... | no p = p
+  example = from-no (32 + 13 ≟ 46)
 
 -- C-c C-n 1 ≟ 2
 
@@ -121,20 +120,20 @@ _≥?_ = flip _≤?_
 
 -- C-c C-n 1 ≤? 3
 -- ⇒ map′ (λ h → ≤-step (≤-step ≤-refl)) (≤⇒≤ᵇ (succ zero) (succ (succ (succ zero)))) (yes tt)
+-- map′ が copattern 定義なので簡約がここで止まり、パターンマッチ時には no の clause を省略できないので注意。
+-- ただし、 from-yes / from-no を用いることはできる。
 
 -- C-c C-n 12 ≤? 13
 
--- _≤?_ を使って書く事はできない?
 module _ where private
   example1 : 1 ≤ 9
-  example1 = ≤ᵇ⇒≤ 1 9 tt
+  example1 = from-yes (1 ≤? 9)
 
   example2 : 32 ≤ 47
-  example2 = ≤ᵇ⇒≤ 32 47 tt
+  example2 = from-yes (32 ≤? 47)
 
   example3 : ¬ (2 ≤ 1)
-  example3 2≤1 with ≤⇒≤ᵇ 2 1 2≤1
-  ... | () 
+  example3 = from-no (2 ≤? 1)
 
 infix 4 _<ᵇ_
 
@@ -147,12 +146,18 @@ _<ᵇ_ m n = succ m ≤ᵇ n
 <⇒<ᵇ : ∀ m n → m < n → T (m <ᵇ n)
 <⇒<ᵇ m n = ≤⇒≤ᵇ (succ m) n
 
+_<?_ : Decidable _<_
+m <? n = m + 1 ≤? n
+
+_>?_ : Decidable _>_
+_>?_ = flip _<?_
+
 module _ where private
   example : 1 < 4
-  example = <ᵇ⇒< 1 4 tt
+  example = from-yes (1 <? 4)
 
 -- 6.7.6 練習問題
 
 module _ where private
   example : (23 < 32) × (12 ≤ 24)
-  example = (<ᵇ⇒< 23 32 tt , ≤ᵇ⇒≤ 12 24 tt)
+  example = (from-yes (23 <? 32) , from-yes (12 ≤? 24))
