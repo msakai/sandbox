@@ -44,3 +44,17 @@ theorem PreInt.r.equiv : Equivalence r :=
 @[instance] def PreInt.sr : Setoid PreInt := ⟨r, r.equiv⟩
 
 abbrev MyInt := Quotient PreInt.sr
+
+-- 7.3.2 同値類のための記法を用意する
+
+#check
+  let a : PreInt := (1, 3)
+  (Quotient.mk PreInt.sr a : MyInt)
+
+#check
+  let a : PreInt := (1, 3)
+  Quotient.mk _ a
+
+notation:arg (priority := low) "⟦" a "⟧" => Quotient.mk _ a
+
+#check (⟦ (1, 3) ⟧ : MyInt)
