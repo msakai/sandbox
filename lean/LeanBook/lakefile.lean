@@ -8,3 +8,6 @@ package "LeanBook" where
 lean_lib «LeanBook» where
   -- add library configuration options here
   globs := #[.submodules `LeanBook]
+
+require mathlib from git
+ "https://github.com/leanprover-community/mathlib4.git" @ "v4.22.0"
