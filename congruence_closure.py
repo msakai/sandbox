@@ -1,5 +1,5 @@
 """
-Claude (Sonnet 5) の書いた Downey-Sethi-Tarjan (1980) 型の congruence closure。
+Claude (Sonnet 5) の書いた Downey-Sethi-Tarjan (1980) 型の congruence closure を少し修正したもの
 
 - backtracking なし
 - explanation (proof) 生成なし
@@ -9,28 +9,43 @@ Claude (Sonnet 5) の書いた Downey-Sethi-Tarjan (1980) 型の congruence clos
   (union-by-size + "小さい方の use-list だけ再ハッシュする" small-to-large trick)
 
 項の表現:
-    アトム            :  "a", 1, ("const", "zero") など、任意のハッシュ可能な値
-    関数適用 f(t1..tn) :  (functor, t1, t2, ..., tn) というタプル
-        例: ("f", "a")            -> f(a)
-            ("f", ("f", "a"))     -> f(f(a))
+    関数記号f         : "a", 1, ("const", "zero") など、任意のハッシュ可能な値
+    アトム            :  Term.constant(f)
+    関数適用 f(t1..tn) :  Term.apply(f, (t1, t2, ..., tn))
+        例:Term.apply("f", Term.constant("a"))                  -> f(a)
+           Term.apply("f", Term.apply("f", Term.constant("a"))) -> f(f(a))
 """
 
 from __future__ import annotations
 
 from collections.abc import Hashable
-from typing import Any
+from dataclasses import dataclass
 
 type NodeId = int
 
 
-class CongruenceClosure:
+@dataclass(frozen=True)
+class Term[F: Hashable]:
+    functor: F
+    subterms: tuple[Term[F], ...]
+
+    @staticmethod
+    def constant(c: F):
+        return Term(c, ())
+
+    @staticmethod
+    def apply(f: F, *args: Term[F]):
+        return Term(f, args)
+
+
+class CongruenceClosure[F]:
     def __init__(self) -> None:
         # union-find 本体
         self._parent: list[NodeId] = []
         self._size: list[int] = []
 
         # ノードの構造情報(root/非root問わず全ノードに定義される)
-        self._func: list[Any] = []  # アトムなら値そのもの、関数適用なら functor
+        self._func: list[F] = []  # functor
         self._args: list[tuple[NodeId, ...]] = []  # アトムなら ()
 
         # root ノードについてのみ有効な補助情報
@@ -41,31 +56,27 @@ class CongruenceClosure:
         self._sigtable: dict[tuple, NodeId] = {}
 
         # hash-consing 用: 元の term オブジェクト -> node id
-        self._node_of: dict[Hashable, NodeId] = {}
+        self._node_of: dict[Term[F], NodeId] = {}
 
         self._pending: list[tuple[NodeId, NodeId]] = []
 
     # ------------------------------------------------------------------
     # 項の登録(hash-consing しつつ内部ノードを構築)
     # ------------------------------------------------------------------
-    def add_term(self, term: Hashable) -> NodeId:
+    def add_term(self, term: Term[F]) -> NodeId:
         """term を登録し、その node id を返す。既出なら既存の id を返す。"""
         existing = self._node_of.get(term)
         if existing is not None:
             return existing
 
-        if isinstance(term, tuple) and len(term) >= 1:
-            functor, *subterms = term
-            arg_ids = tuple(self.add_term(t) for t in subterms)
-        else:
-            functor, arg_ids = term, ()
+        arg_ids = tuple(self.add_term(t) for t in term.subterms)
 
-        nid = self._new_node(functor, arg_ids)
+        nid = self._new_node(term.functor, arg_ids)
         self._node_of[term] = nid
         self._propagate()
         return nid
 
-    def _new_node(self, functor: Any, args: tuple[NodeId, ...]) -> NodeId:
+    def _new_node(self, functor: F, args: tuple[NodeId, ...]) -> NodeId:
         nid = len(self._parent)
         self._parent.append(nid)
         self._size.append(1)
@@ -154,20 +165,18 @@ class CongruenceClosure:
     # ------------------------------------------------------------------
     # デバッグ用
     # ------------------------------------------------------------------
-    def term_of(self, nid: NodeId) -> Any:
-        """node id から (functor, arg-terms...) 形式に戻す(表示用)。"""
-        if not self._args[nid]:
-            return self._func[nid]
-        return (self._func[nid], *(self.term_of(a) for a in self._args[nid]))
+    def term_of(self, nid: NodeId) -> Term[F]:
+        """NodeId から Term に戻す(表示用)。"""
+        return Term(self._func[nid], tuple(self.term_of(a) for a in self._args[nid]))
 
 
 if __name__ == "__main__":
-    cc = CongruenceClosure()
+    cc = CongruenceClosure[str]()
 
-    def f(x: Hashable) -> Hashable:
-        return ("f", x)
+    def f(x: Term[str]) -> Term[str]:
+        return Term.apply("f", x)
 
-    a = "a"
+    a = Term.constant("a")
     cc.merge(cc.add_term(f(f(f(a)))), cc.add_term(a))
     cc.merge(cc.add_term(f(f(f(f(f(a)))))), cc.add_term(a))
     assert cc.are_equal(cc.add_term(f(a)), cc.add_term(a))
