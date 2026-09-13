@@ -32,11 +32,11 @@ class Term[F: Hashable]:
     subterms: tuple[Term[F], ...]
 
     @staticmethod
-    def constant(c: F):
+    def constant(c: F) -> Term[F]:
         return Term(c, ())
 
     @staticmethod
-    def apply(f: F, *args: Term[F]):
+    def apply(f: F, *args: Term[F]) -> Term[F]:
         return Term(f, args)
 
 
