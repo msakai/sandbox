@@ -1,19 +1,21 @@
 """
-Claude (Sonnet 5) の書いた Downey-Sethi-Tarjan (1980) 型の congruence closure を少し修正したもの
+Downey-Sethi-Tarjan (1980) style congruence closure, based on a version
+written by Claude (Sonnet 5) with minor modifications.
 
-- backtracking なし
-- explanation (proof) 生成なし
-- ground term のみ(変数・E-matching は扱わない)
+- no backtracking
+- no explanation (proof) generation
+- ground terms only (no variables / E-matching)
 
-計算量: 要素数を n として amortized O(n log n)
-  (union-by-size + "小さい方の use-list だけ再ハッシュする" small-to-large trick)
+Complexity: amortized O(n log n) where n is the number of elements
+  (union-by-size + the "small-to-large" trick of only rehashing the
+  smaller side's use-list)
 
-項の表現:
-    関数記号f         : "a", 1, ("const", "zero") など、任意のハッシュ可能な値
-    アトム            :  Term.constant(f)
-    関数適用 f(t1..tn) :  Term.apply(f, (t1, t2, ..., tn))
-        例:Term.apply("f", Term.constant("a"))                  -> f(a)
-           Term.apply("f", Term.apply("f", Term.constant("a"))) -> f(f(a))
+Term representation:
+    Function symbol f : any hashable value, e.g. "a", 1, ("const", "zero")
+    Atom              : Term.constant(f)
+    Application f(t1..tn) : Term.apply(f, (t1, t2, ..., tn))
+        e.g. Term.apply("f", Term.constant("a"))                  -> f(a)
+             Term.apply("f", Term.apply("f", Term.constant("a"))) -> f(f(a))
 """
 
 from __future__ import annotations
@@ -40,31 +42,31 @@ class Term[F: Hashable]:
 
 class CongruenceClosure[F]:
     def __init__(self) -> None:
-        # union-find 本体
+        # core union-find
         self._parent: list[NodeId] = []
         self._size: list[int] = []
 
-        # ノードの構造情報(root/非root問わず全ノードに定義される)
+        # structural info for every node (root or not)
         self._func: list[F] = []  # functor
-        self._args: list[tuple[NodeId, ...]] = []  # アトムなら ()
+        self._args: list[tuple[NodeId, ...]] = []  # () for atoms
 
-        # root ノードについてのみ有効な補助情報
+        # auxiliary info that is only valid for root nodes
         self._uselist: list[list[NodeId]] = []
         self._members: list[list[NodeId]] = []
 
-        # signature -> 代表項ノード(root である必要はない)
+        # signature -> representative application node (need not be a root)
         self._sigtable: dict[tuple, NodeId] = {}
 
-        # hash-consing 用: 元の term オブジェクト -> node id
+        # for hash-consing: original Term object -> node id
         self._node_of: dict[Term[F], NodeId] = {}
 
         self._pending: list[tuple[NodeId, NodeId]] = []
 
     # ------------------------------------------------------------------
-    # 項の登録(hash-consing しつつ内部ノードを構築)
+    # Registering a term (builds internal nodes with hash-consing)
     # ------------------------------------------------------------------
     def add_term(self, term: Term[F]) -> NodeId:
-        """term を登録し、その node id を返す。既出なら既存の id を返す。"""
+        """Register term and return its node id. Returns the existing id if already registered."""
         existing = self._node_of.get(term)
         if existing is not None:
             return existing
@@ -85,11 +87,11 @@ class CongruenceClosure[F]:
         self._func.append(functor)
         self._args.append(args)
 
-        # 自分自身を、各引数(の現在の root)の use-list に登録
+        # register this node in the use-list of each argument's current root
         for a in args:
             self._uselist[self.find(a)].append(nid)
 
-        # 関数適用ノードなら signature を計算し、既存と衝突するか確認
+        # for an application node, compute its signature and check for a collision
         if args:
             sig = self._signature(nid)
             existing = self._sigtable.get(sig)
@@ -104,13 +106,13 @@ class CongruenceClosure[F]:
         return (self._func[nid], tuple(self.find(a) for a in self._args[nid]))
 
     # ------------------------------------------------------------------
-    # union-find コア
+    # union-find core
     # ------------------------------------------------------------------
     def find(self, x: NodeId) -> NodeId:
         root = x
         while self._parent[root] != root:
             root = self._parent[root]
-        while self._parent[x] != root:  # 経路圧縮
+        while self._parent[x] != root:  # path compression
             self._parent[x], x = root, self._parent[x]
         return root
 
@@ -118,15 +120,15 @@ class CongruenceClosure[F]:
         return self.find(a) == self.find(b)
 
     def class_members(self, x: NodeId) -> list[NodeId]:
-        """x と同じ eclass に属する全ノード id のリスト。"""
+        """List of all node ids in the same eclass as x."""
         return self._members[self.find(x)]
 
     def representative_term(self, x: NodeId) -> NodeId:
-        """x の eclass の代表元ノード id(単なる root)。"""
+        """Node id of the representative of x's eclass (just the root)."""
         return self.find(x)
 
     # ------------------------------------------------------------------
-    # 等式のマージ(外部から a = b を主張するときのエントリポイント)
+    # Merging an equation (entry point for asserting a = b from outside)
     # ------------------------------------------------------------------
     def merge(self, a: NodeId, b: NodeId) -> None:
         self._pending.append((a, b))
@@ -139,7 +141,7 @@ class CongruenceClosure[F]:
             if ra == rb:
                 continue
 
-            # サイズが小さい方 (rb) を大きい方 (ra) に吸収する
+            # absorb the smaller class (rb) into the larger one (ra)
             if self._size[ra] < self._size[rb]:
                 ra, rb = rb, ra
 
@@ -147,9 +149,9 @@ class CongruenceClosure[F]:
             self._size[ra] += self._size[rb]
             self._members[ra].extend(self._members[rb])
 
-            # --- ここが DST のキモ: 吸収される側 (rb) の use-list だけを ---
-            # --- 再ハッシュする。ra 側の use-list はキー(root id)が   ---
-            # --- 変化していないので触らなくてよい。                    ---
+            # --- This is the core DST trick: only rehash the use-list of ---
+            # --- the absorbed side (rb). The use-list on the ra side is  ---
+            # --- untouched since its keys (root ids) haven't changed.    ---
             moved = self._uselist[rb]
             self._uselist[rb] = []
             self._uselist[ra].extend(moved)
@@ -163,10 +165,10 @@ class CongruenceClosure[F]:
                     self._pending.append((p, q))
 
     # ------------------------------------------------------------------
-    # デバッグ用
+    # For debugging
     # ------------------------------------------------------------------
     def term_of(self, nid: NodeId) -> Term[F]:
-        """NodeId から Term に戻す(表示用)。"""
+        """Convert a NodeId back into a Term (for display)."""
         return Term(self._func[nid], tuple(self.term_of(a) for a in self._args[nid]))
 
 
