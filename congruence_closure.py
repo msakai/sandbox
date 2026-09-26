@@ -13,7 +13,7 @@ Complexity: amortized O(n log n) where n is the number of elements
 Term representation:
     Function symbol f : any hashable value, e.g. "a", 1, ("const", "zero")
     Atom              : Term.constant(f)
-    Application f(t1..tn) : Term.apply(f, (t1, t2, ..., tn))
+    Application f(t1..tn) : Term.apply(f, t1, t2, ..., tn)
         e.g. Term.apply("f", Term.constant("a"))                  -> f(a)
              Term.apply("f", Term.apply("f", Term.constant("a"))) -> f(f(a))
 """
@@ -24,6 +24,8 @@ from collections.abc import Hashable
 from dataclasses import dataclass
 
 type NodeId = int
+
+type Signature[F: Hashable] = tuple[F, tuple[NodeId, ...]]
 
 
 @dataclass(frozen=True)
@@ -44,7 +46,6 @@ class CongruenceClosure[F]:
     def __init__(self) -> None:
         # core union-find
         self._parent: list[NodeId] = []
-        self._size: list[int] = []
 
         # structural info for every node (root or not)
         self._func: list[F] = []  # functor
@@ -55,7 +56,7 @@ class CongruenceClosure[F]:
         self._members: list[list[NodeId]] = []
 
         # signature -> representative application node (need not be a root)
-        self._sigtable: dict[tuple, NodeId] = {}
+        self._sigtable: dict[Signature[F], NodeId] = {}
 
         # for hash-consing: original Term object -> node id
         self._node_of: dict[Term[F], NodeId] = {}
@@ -81,7 +82,6 @@ class CongruenceClosure[F]:
     def _new_node(self, functor: F, args: tuple[NodeId, ...]) -> NodeId:
         nid = len(self._parent)
         self._parent.append(nid)
-        self._size.append(1)
         self._uselist.append([])
         self._members.append([nid])
         self._func.append(functor)
@@ -102,7 +102,7 @@ class CongruenceClosure[F]:
 
         return nid
 
-    def _signature(self, nid: NodeId) -> tuple:
+    def _signature(self, nid: NodeId) -> Signature[F]:
         return (self._func[nid], tuple(self.find(a) for a in self._args[nid]))
 
     # ------------------------------------------------------------------
@@ -142,16 +142,15 @@ class CongruenceClosure[F]:
                 continue
 
             # absorb the smaller class (rb) into the larger one (ra)
-            if self._size[ra] < self._size[rb]:
+            if len(self._members[ra]) < len(self._members[rb]):
                 ra, rb = rb, ra
 
             self._parent[rb] = ra
-            self._size[ra] += self._size[rb]
             self._members[ra].extend(self._members[rb])
 
-            # --- This is the core DST trick: only rehash the use-list of ---
-            # --- the absorbed side (rb). The use-list on the ra side is  ---
-            # --- untouched since its keys (root ids) haven't changed.    ---
+            # This is the core DST trick: only rehash the use-list of
+            # the absorbed side (rb). The use-list on the ra side is
+            # untouched since its keys (root ids) haven't changed.
             moved = self._uselist[rb]
             self._uselist[rb] = []
             self._uselist[ra].extend(moved)
