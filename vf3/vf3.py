@@ -34,7 +34,7 @@ VF3 の簡易 Python 実装
 from __future__ import annotations
 
 from collections import Counter, defaultdict
-from typing import Dict, Hashable, Iterator, List, Optional, Tuple
+from collections.abc import Hashable, Iterator
 
 
 class Graph:
@@ -44,15 +44,16 @@ class Graph:
     out_adj[u][v] / in_adj[v][u] に辺ラベルを持つ。
     """
 
-    def __init__(self, n: int, directed: bool = False,
-                 labels: Optional[List[Hashable]] = None):
+    def __init__(
+        self, n: int, directed: bool = False, labels: list[Hashable] | None = None
+    ):
         self.n = n
         self.directed = directed
-        self.labels: List[Hashable] = list(labels) if labels is not None else [None] * n
+        self.labels: list[Hashable] = list(labels) if labels is not None else [None] * n
         if len(self.labels) != n:
             raise ValueError("labels の長さがノード数と一致しません")
-        self.out_adj: List[Dict[int, Hashable]] = [dict() for _ in range(n)]
-        self.in_adj: List[Dict[int, Hashable]] = [dict() for _ in range(n)]
+        self.out_adj: list[dict[int, Hashable]] = [{} for _ in range(n)]
+        self.in_adj: list[dict[int, Hashable]] = [{} for _ in range(n)]
 
     def add_edge(self, u: int, v: int, label: Hashable = None) -> None:
         self.out_adj[u][v] = label
@@ -81,7 +82,8 @@ class Graph:
 # 前処理
 # ---------------------------------------------------------------------------
 
-def compute_order(g1: Graph, g2: Graph) -> List[int]:
+
+def compute_order(g1: Graph, g2: Graph) -> list[int]:
     """探索順序 N_G1 を計算する (Sect. 2.2)。
 
     1. d_M(u): 既に順序に入ったノードとの辺数 (大きい方を優先)
@@ -110,7 +112,7 @@ def compute_order(g1: Graph, g2: Graph) -> List[int]:
     nbrs = [g1.neighbors(u) for u in range(g1.n)]
     d_m = [0] * g1.n
     in_seq = [False] * g1.n
-    order: List[int] = []
+    order: list[int] = []
     # 簡易実装: 毎回線形走査 (O(N1^2))
     for _ in range(g1.n):
         best = None
@@ -132,10 +134,22 @@ def compute_order(g1: Graph, g2: Graph) -> List[int]:
 
 class _Level:
     """レベル k (= 状態の対応数が k) で追加される u_n = N_G1[k] に関する前計算情報。"""
-    __slots__ = ("u", "cls", "parent", "parent_is_pred",
-                 "core_out", "core_in", "self_loop",
-                 "la1_out", "la1_in", "la2_out", "la2_in",
-                 "out_deg", "in_deg")
+
+    __slots__ = (
+        "cls",
+        "core_in",
+        "core_out",
+        "in_deg",
+        "la1_in",
+        "la1_out",
+        "la2_in",
+        "la2_out",
+        "out_deg",
+        "parent",
+        "parent_is_pred",
+        "self_loop",
+        "u",
+    )
 
 
 class VF3:
@@ -147,7 +161,7 @@ class VF3:
         self.directed = pattern.directed
 
         # クラス分け関数 ψ: ノードラベル → 整数クラス
-        cls_of_label: Dict[Hashable, int] = {}
+        cls_of_label: dict[Hashable, int] = {}
         for lab in list(pattern.labels) + list(target.labels):
             if lab not in cls_of_label:
                 cls_of_label[lab] = len(cls_of_label)
@@ -158,12 +172,12 @@ class VF3:
         self.levels = self._preprocess()
 
         # G2 のクラス別ノードリスト (R2 の列挙用)
-        self.nodes2_by_cls: Dict[int, List[int]] = defaultdict(list)
+        self.nodes2_by_cls: dict[int, list[int]] = defaultdict(list)
         for v in range(target.n):
             self.nodes2_by_cls[self.cls2[v]].append(v)
 
     # -- Algorithm 1: PreprocessGraph -------------------------------------
-    def _preprocess(self) -> List[_Level]:
+    def _preprocess(self) -> list[_Level]:
         g1 = self.g1
         n1 = g1.n
         pos = [0] * n1
@@ -173,35 +187,44 @@ class VF3:
         # parent tree と T1 の区間表現。
         # u は レベル k で T1 に属する  ⇔  t_enter[u] <= k <= pos[u]
         # (k <= pos[u] で未対応、t_enter[u] <= k で対応済みノードに隣接)
-        parent: List[Optional[int]] = [None] * n1
+        parent: list[int | None] = [None] * n1
         t_enter = [n1 + 1] * n1
         for i, u in enumerate(self.order):
             for w in g1.neighbors(u):
                 if pos[w] > i and t_enter[w] > n1:
-                    t_enter[w] = i + 1        # レベル i+1 から T1 に入る
+                    t_enter[w] = i + 1  # レベル i+1 から T1 に入る
                     parent[w] = u
         self.t1_interval = [(t_enter[u], pos[u]) for u in range(n1)]
         self.parent = parent
         self.pos = pos
 
-        levels: List[_Level] = []
+        levels: list[_Level] = []
         for k, u in enumerate(self.order):
             L = _Level()
             L.u = u
             L.cls = self.cls1[u]
             L.parent = parent[u]
             # u が parent の出辺先 (parent -> u) かどうか
-            L.parent_is_pred = (parent[u] is not None and u in g1.out_adj[parent[u]])
+            L.parent_is_pred = parent[u] is not None and u in g1.out_adj[parent[u]]
             L.out_deg = g1.out_degree(u)
             L.in_deg = g1.in_degree(u)
             L.self_loop = (u in g1.out_adj[u], g1.out_adj[u].get(u))
             # core rule で使う「既に対応済みの近傍」(レベル k の状態では pos < k)
-            L.core_out = [(w, lab) for w, lab in g1.out_adj[u].items() if w != u and pos[w] < k]
-            L.core_in = [(w, lab) for w, lab in g1.in_adj[u].items() if w != u and pos[w] < k]
+            L.core_out = [
+                (w, lab) for w, lab in g1.out_adj[u].items() if w != u and pos[w] < k
+            ]
+            L.core_in = [
+                (w, lab) for w, lab in g1.in_adj[u].items() if w != u and pos[w] < k
+            ]
             # 先読み規則用カウント: レベル k の状態 s_c に対して
             #   T1  : t_enter[w] <= k <= pos[w]  (かつ w != u)
             #   V1~ : k < t_enter[w] (つまり未対応かつ非隣接)
-            la1_out, la1_in, la2_out, la2_in = Counter(), Counter(), Counter(), Counter()
+            la1_out, la1_in, la2_out, la2_in = (
+                Counter(),
+                Counter(),
+                Counter(),
+                Counter(),
+            )
             for w in g1.out_adj[u]:
                 if w == u or pos[w] < k:
                     continue
@@ -223,7 +246,7 @@ class VF3:
         return levels
 
     # -- マッチング ---------------------------------------------------------
-    def match(self) -> Iterator[Dict[int, int]]:
+    def match(self) -> Iterator[dict[int, int]]:
         """すべての (誘導) 部分グラフ同型写像 {pattern ノード: target ノード} を列挙する。"""
         g1, g2 = self.g1, self.g2
         n1 = g1.n
@@ -233,9 +256,9 @@ class VF3:
         if n1 > g2.n:
             return
 
-        core1 = [-1] * n1             # μ
-        core2 = [-1] * g2.n           # μ^{-1}
-        t2_cnt = [0] * g2.n           # 対応済み近傍の個数 (>0 かつ未対応 ⇒ T2)
+        core1 = [-1] * n1  # μ
+        core2 = [-1] * g2.n  # μ^{-1}
+        t2_cnt = [0] * g2.n  # 対応済み近傍の個数 (>0 かつ未対応 ⇒ T2)
         nbrs2 = [g2.neighbors(v) for v in range(g2.n)]
 
         def add_pair(u: int, v: int) -> None:
@@ -253,11 +276,11 @@ class VF3:
         # Algorithm 2: SelectCandidate (候補 v_n の列挙)
         def candidates(L: _Level) -> Iterator[int]:
             if L.parent is None:
-                pool = self.nodes2_by_cls.get(L.cls, ())          # 式 (8)
+                pool = self.nodes2_by_cls.get(L.cls, ())  # 式 (8)
             else:
-                v_tilde = core1[L.parent]                         # μ(Parent(u_n))
+                v_tilde = core1[L.parent]  # μ(Parent(u_n))
                 if L.parent_is_pred:
-                    pool = g2.out_adj[v_tilde]                    # 式 (9)
+                    pool = g2.out_adj[v_tilde]  # 式 (9)
                 else:
                     pool = g2.in_adj[v_tilde]
             for v in pool:
@@ -265,7 +288,7 @@ class VF3:
                     yield v
 
         def feasible(L: _Level, v: int) -> bool:
-            u = L.u
+            _u = L.u
             # 安価な次数フィルタ
             if g2.out_degree(v) < L.out_deg or g2.in_degree(v) < L.in_deg:
                 return False
@@ -335,17 +358,19 @@ class VF3:
 
         # 明示的スタックによる深さ優先探索 (再帰上限を避ける)
         levels = self.levels
-        stack: List[Tuple[int, Iterator[int], int]] = []   # (level, 候補イテレータ, 現在の v)
+        stack: list[
+            tuple[int, Iterator[int], int]
+        ] = []  # (level, 候補イテレータ, 現在の v)
         stack.append((0, candidates(levels[0]), -1))
         while stack:
             k, it, prev_v = stack.pop()
             L = levels[k]
             if prev_v != -1:
-                remove_pair(L.u, prev_v)                    # バックトラック
+                remove_pair(L.u, prev_v)  # バックトラック
             for v in it:
                 if feasible(L, v):
                     add_pair(L.u, v)
-                    if k + 1 == n1:                          # ゴール状態
+                    if k + 1 == n1:  # ゴール状態
                         yield {u: core1[u] for u in range(n1)}
                         remove_pair(L.u, v)
                         continue
@@ -354,7 +379,7 @@ class VF3:
                     break
 
 
-def subgraph_isomorphisms(pattern: Graph, target: Graph) -> Iterator[Dict[int, int]]:
+def subgraph_isomorphisms(pattern: Graph, target: Graph) -> Iterator[dict[int, int]]:
     """pattern から target への誘導部分グラフ同型をすべて列挙する。"""
     return VF3(pattern, target).match()
 
@@ -366,7 +391,9 @@ def has_subgraph_isomorphism(pattern: Graph, target: Graph) -> bool:
 if __name__ == "__main__":
     # 例: 三角形 (ラベル A,B,C) を探す
     p = Graph(3, labels=["A", "B", "C"])
-    p.add_edge(0, 1); p.add_edge(1, 2); p.add_edge(2, 0)
+    p.add_edge(0, 1)
+    p.add_edge(1, 2)
+    p.add_edge(2, 0)
 
     t = Graph(6, labels=["A", "B", "C", "A", "B", "C"])
     for a, b in [(0, 1), (1, 2), (2, 0), (2, 3), (3, 4), (4, 5), (5, 3), (0, 4)]:
