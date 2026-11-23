@@ -34,7 +34,8 @@ VF3 の簡易 Python 実装
 from __future__ import annotations
 
 from collections import Counter, defaultdict
-from collections.abc import Hashable, Iterator
+from collections.abc import Collection, Hashable, Iterator
+from dataclasses import dataclass
 
 
 class Graph:
@@ -46,7 +47,7 @@ class Graph:
 
     def __init__(
         self, n: int, directed: bool = False, labels: list[Hashable] | None = None
-    ):
+    ) -> None:
         self.n = n
         self.directed = directed
         self.labels: list[Hashable] = list(labels) if labels is not None else [None] * n
@@ -62,7 +63,7 @@ class Graph:
             self.out_adj[v][u] = label
             self.in_adj[u][v] = label
 
-    def neighbors(self, u: int) -> set:
+    def neighbors(self, u: int) -> set[int]:
         """方向を無視した隣接ノード集合 (自己ループは除く)。"""
         s = set(self.out_adj[u]) | set(self.in_adj[u])
         s.discard(u)
@@ -132,28 +133,30 @@ def compute_order(g1: Graph, g2: Graph) -> list[int]:
     return order
 
 
+type _Cls = int
+
+
+@dataclass(slots=True)
 class _Level:
     """レベル k (= 状態の対応数が k) で追加される u_n = N_G1[k] に関する前計算情報。"""
 
-    __slots__ = (
-        "cls",
-        "core_in",
-        "core_out",
-        "in_deg",
-        "la1_in",
-        "la1_out",
-        "la2_in",
-        "la2_out",
-        "out_deg",
-        "parent",
-        "parent_is_pred",
-        "self_loop",
-        "u",
-    )
+    cls: _Cls
+    core_in: list[tuple[int, Hashable]]
+    core_out: list[tuple[int, Hashable]]
+    in_deg: int
+    la1_in: dict[_Cls, int]
+    la1_out: dict[_Cls, int]
+    la2_in: dict[_Cls, int]
+    la2_out: dict[_Cls, int]
+    out_deg: int
+    parent: int | None
+    parent_is_pred: bool
+    self_loop: tuple[int, Hashable]
+    u: int
 
 
 class VF3:
-    def __init__(self, pattern: Graph, target: Graph):
+    def __init__(self, pattern: Graph, target: Graph) -> None:
         if pattern.directed != target.directed:
             raise ValueError("pattern と target の有向/無向が一致していません")
         self.g1 = pattern
@@ -161,7 +164,7 @@ class VF3:
         self.directed = pattern.directed
 
         # クラス分け関数 ψ: ノードラベル → 整数クラス
-        cls_of_label: dict[Hashable, int] = {}
+        cls_of_label: dict[Hashable, _Cls] = {}
         for lab in list(pattern.labels) + list(target.labels):
             if lab not in cls_of_label:
                 cls_of_label[lab] = len(cls_of_label)
@@ -172,7 +175,7 @@ class VF3:
         self.levels = self._preprocess()
 
         # G2 のクラス別ノードリスト (R2 の列挙用)
-        self.nodes2_by_cls: dict[int, list[int]] = defaultdict(list)
+        self.nodes2_by_cls: dict[_Cls, list[int]] = defaultdict(list)
         for v in range(target.n):
             self.nodes2_by_cls[self.cls2[v]].append(v)
 
@@ -200,30 +203,14 @@ class VF3:
 
         levels: list[_Level] = []
         for k, u in enumerate(self.order):
-            L = _Level()
-            L.u = u
-            L.cls = self.cls1[u]
-            L.parent = parent[u]
-            # u が parent の出辺先 (parent -> u) かどうか
-            L.parent_is_pred = parent[u] is not None and u in g1.out_adj[parent[u]]
-            L.out_deg = g1.out_degree(u)
-            L.in_deg = g1.in_degree(u)
-            L.self_loop = (u in g1.out_adj[u], g1.out_adj[u].get(u))
-            # core rule で使う「既に対応済みの近傍」(レベル k の状態では pos < k)
-            L.core_out = [
-                (w, lab) for w, lab in g1.out_adj[u].items() if w != u and pos[w] < k
-            ]
-            L.core_in = [
-                (w, lab) for w, lab in g1.in_adj[u].items() if w != u and pos[w] < k
-            ]
             # 先読み規則用カウント: レベル k の状態 s_c に対して
             #   T1  : t_enter[w] <= k <= pos[w]  (かつ w != u)
             #   V1~ : k < t_enter[w] (つまり未対応かつ非隣接)
             la1_out, la1_in, la2_out, la2_in = (
-                Counter(),
-                Counter(),
-                Counter(),
-                Counter(),
+                Counter[_Cls](),
+                Counter[_Cls](),
+                Counter[_Cls](),
+                Counter[_Cls](),
             )
             for w in g1.out_adj[u]:
                 if w == u or pos[w] < k:
@@ -240,9 +227,33 @@ class VF3:
                         la1_in[self.cls1[w]] += 1
                     else:
                         la2_in[self.cls1[w]] += 1
-            L.la1_out, L.la1_in = dict(la1_out), dict(la1_in)
-            L.la2_out, L.la2_in = dict(la2_out), dict(la2_in)
+
+            L = _Level(
+                u=u,
+                cls=self.cls1[u],
+                parent=parent[u],
+                # u が parent の出辺先 (parent -> u) かどうか
+                parent_is_pred=(p := parent[u]) is not None and u in g1.out_adj[p],
+                out_deg=g1.out_degree(u),
+                in_deg=g1.in_degree(u),
+                self_loop=(u in g1.out_adj[u], g1.out_adj[u].get(u)),
+                # core rule で使う「既に対応済みの近傍」(レベル k の状態では pos < k)
+                core_out=[
+                    (w, lab)
+                    for w, lab in g1.out_adj[u].items()
+                    if w != u and pos[w] < k
+                ],
+                core_in=[
+                    (w, lab) for w, lab in g1.in_adj[u].items() if w != u and pos[w] < k
+                ],
+                la1_out=dict(la1_out),
+                la1_in=dict(la1_in),
+                la2_out=dict(la2_out),
+                la2_in=dict(la2_in),
+            )
+
             levels.append(L)
+
         return levels
 
     # -- マッチング ---------------------------------------------------------
@@ -275,6 +286,7 @@ class VF3:
 
         # Algorithm 2: SelectCandidate (候補 v_n の列挙)
         def candidates(L: _Level) -> Iterator[int]:
+            pool: Collection[int]
             if L.parent is None:
                 pool = self.nodes2_by_cls.get(L.cls, ())  # 式 (8)
             else:
@@ -314,7 +326,7 @@ class VF3:
             # 上で u 側の像が全部 v の近傍に含まれることを確認済みなので個数比較で十分。
             # 同時に先読み規則のための G2 側カウントもここで集計する。
             cnt_core_out = 0
-            la1_out, la2_out = Counter(), Counter()
+            la1_out, la2_out = Counter[int](), Counter[int]()
             for w in out2:
                 if w == v:
                     continue
@@ -328,7 +340,7 @@ class VF3:
                 return False
             if self.directed:
                 cnt_core_in = 0
-                la1_in, la2_in = Counter(), Counter()
+                la1_in, la2_in = Counter[int](), Counter[int]()
                 for w in g2.in_adj[v]:
                     if w == v:
                         continue

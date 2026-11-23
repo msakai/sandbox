@@ -6,9 +6,11 @@ from networkx.algorithms import isomorphism as iso
 from vf3 import VF3, Graph
 
 
-def build(n, p, directed, nl, el, rng):
+def build(
+    n: int, p: float, directed: bool, nl: int, el: int, rng: random.Random
+) -> tuple[Graph, nx.Graph]:
     g = Graph(n, directed, [rng.randrange(nl) for _ in range(n)])
-    G = (nx.DiGraph if directed else nx.Graph)()
+    G: nx.Graph = (nx.DiGraph if directed else nx.Graph)()
     for i in range(n):
         G.add_node(i, l=g.labels[i])
     for a in range(n):
@@ -24,11 +26,13 @@ def build(n, p, directed, nl, el, rng):
     return g, G
 
 
-def sub_pattern(G, g_t, k, directed, rng):
+def sub_pattern(
+    G: nx.Graph, g_t: Graph, k, directed: bool, rng: random.Random
+) -> tuple[Graph, nx.Graph]:
     nodes = rng.sample(range(g_t.n), k)
     idx = {v: i for i, v in enumerate(nodes)}
     p = Graph(k, directed, [g_t.labels[v] for v in nodes])
-    P = (nx.DiGraph if directed else nx.Graph)()
+    P: nx.Graph = (nx.DiGraph if directed else nx.Graph)()
     for v in nodes:
         P.add_node(idx[v], l=g_t.labels[v])
     for a in nodes:
