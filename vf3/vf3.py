@@ -38,7 +38,7 @@ from collections.abc import Collection, Hashable, Iterator
 from dataclasses import dataclass
 
 
-class Graph:
+class Graph[NodeLabel: Hashable, EdgeLabel: Hashable]:
     """ノードラベル・辺ラベル付きの単純グラフ (有向/無向)。
 
     ノードは 0..n-1 の整数。無向グラフでは辺を両方向に格納する。
@@ -46,17 +46,22 @@ class Graph:
     """
 
     def __init__(
-        self, n: int, directed: bool = False, labels: list[Hashable] | None = None
+        self,
+        n: int,
+        directed: bool = False,
+        labels: list[NodeLabel | None] | None = None,
     ) -> None:
         self.n = n
         self.directed = directed
-        self.labels: list[Hashable] = list(labels) if labels is not None else [None] * n
+        self.labels: list[NodeLabel | None] = (
+            list(labels) if labels is not None else [None] * n
+        )
         if len(self.labels) != n:
             raise ValueError("labels の長さがノード数と一致しません")
-        self.out_adj: list[dict[int, Hashable]] = [{} for _ in range(n)]
-        self.in_adj: list[dict[int, Hashable]] = [{} for _ in range(n)]
+        self.out_adj: list[dict[int, EdgeLabel | None]] = [{} for _ in range(n)]
+        self.in_adj: list[dict[int, EdgeLabel | None]] = [{} for _ in range(n)]
 
-    def add_edge(self, u: int, v: int, label: Hashable = None) -> None:
+    def add_edge(self, u: int, v: int, label: EdgeLabel | None = None) -> None:
         self.out_adj[u][v] = label
         self.in_adj[v][u] = label
         if not self.directed:
@@ -84,7 +89,9 @@ class Graph:
 # ---------------------------------------------------------------------------
 
 
-def compute_order(g1: Graph, g2: Graph) -> list[int]:
+def compute_order[NodeLabel: Hashable, EdgeLabel: Hashable](
+    g1: Graph[NodeLabel, EdgeLabel], g2: Graph[NodeLabel, EdgeLabel]
+) -> list[int]:
     """探索順序 N_G1 を計算する (Sect. 2.2)。
 
     1. d_M(u): 既に順序に入ったノードとの辺数 (大きい方を優先)
@@ -137,7 +144,7 @@ type _Cls = int
 
 
 @dataclass(slots=True)
-class _Level:
+class _Level[NodeLabel: Hashable, EdgeLabel: Hashable]:
     """レベル k (= 状態の対応数が k) で追加される u_n = N_G1[k] に関する前計算情報。"""
 
     cls: _Cls
@@ -155,8 +162,10 @@ class _Level:
     u: int
 
 
-class VF3:
-    def __init__(self, pattern: Graph, target: Graph) -> None:
+class VF3[NodeLabel: Hashable, EdgeLabel: Hashable]:
+    def __init__(
+        self, pattern: Graph[NodeLabel, EdgeLabel], target: Graph[NodeLabel, EdgeLabel]
+    ) -> None:
         if pattern.directed != target.directed:
             raise ValueError("pattern と target の有向/無向が一致していません")
         self.g1 = pattern
@@ -164,7 +173,7 @@ class VF3:
         self.directed = pattern.directed
 
         # クラス分け関数 ψ: ノードラベル → 整数クラス
-        cls_of_label: dict[Hashable, _Cls] = {}
+        cls_of_label: dict[NodeLabel | None, _Cls] = {}
         for lab in list(pattern.labels) + list(target.labels):
             if lab not in cls_of_label:
                 cls_of_label[lab] = len(cls_of_label)
@@ -201,7 +210,7 @@ class VF3:
         self.parent = parent
         self.pos = pos
 
-        levels: list[_Level] = []
+        levels: list[_Level[NodeLabel, EdgeLabel]] = []
         for k, u in enumerate(self.order):
             # 先読み規則用カウント: レベル k の状態 s_c に対して
             #   T1  : t_enter[w] <= k <= pos[w]  (かつ w != u)
@@ -228,7 +237,7 @@ class VF3:
                     else:
                         la2_in[self.cls1[w]] += 1
 
-            L = _Level(
+            L = _Level[NodeLabel, EdgeLabel](
                 u=u,
                 cls=self.cls1[u],
                 parent=parent[u],
@@ -402,12 +411,12 @@ def has_subgraph_isomorphism(pattern: Graph, target: Graph) -> bool:
 
 if __name__ == "__main__":
     # 例: 三角形 (ラベル A,B,C) を探す
-    p = Graph(3, labels=["A", "B", "C"])
+    p = Graph[str, None](3, labels=["A", "B", "C"])
     p.add_edge(0, 1)
     p.add_edge(1, 2)
     p.add_edge(2, 0)
 
-    t = Graph(6, labels=["A", "B", "C", "A", "B", "C"])
+    t = Graph[str, None](6, labels=["A", "B", "C", "A", "B", "C"])
     for a, b in [(0, 1), (1, 2), (2, 0), (2, 3), (3, 4), (4, 5), (5, 3), (0, 4)]:
         t.add_edge(a, b)
 

@@ -8,8 +8,8 @@ from vf3 import VF3, Graph
 
 def build(
     n: int, p: float, directed: bool, nl: int, el: int, rng: random.Random
-) -> tuple[Graph, nx.Graph]:
-    g = Graph(n, directed, [rng.randrange(nl) for _ in range(n)])
+) -> tuple[Graph[int, int], nx.Graph]:
+    g = Graph[int, int](n, directed, [rng.randrange(nl) for _ in range(n)])
     G: nx.Graph = (nx.DiGraph if directed else nx.Graph)()
     for i in range(n):
         G.add_node(i, l=g.labels[i])
@@ -27,11 +27,11 @@ def build(
 
 
 def sub_pattern(
-    G: nx.Graph, g_t: Graph, k, directed: bool, rng: random.Random
-) -> tuple[Graph, nx.Graph]:
+    G: nx.Graph, g_t: Graph[int, int], k, directed: bool, rng: random.Random
+) -> tuple[Graph[int, int], nx.Graph]:
     nodes = rng.sample(range(g_t.n), k)
     idx = {v: i for i, v in enumerate(nodes)}
-    p = Graph(k, directed, [g_t.labels[v] for v in nodes])
+    p = Graph[int, int](k, directed, [g_t.labels[v] for v in nodes])
     P: nx.Graph = (nx.DiGraph if directed else nx.Graph)()
     for v in nodes:
         P.add_node(idx[v], l=g_t.labels[v])
