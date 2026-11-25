@@ -1,4 +1,3 @@
-import itertools
 from pathlib import Path
 
 import z3
@@ -27,8 +26,8 @@ def is_winning_board(marks: Marks) -> z3.ExprRef:
     )
 
 
-def is_possible_move(
-    move: tuple[z3.ExprRef], player1_marks: Marks, player2_marks: Marks
+def is_valid_move(
+    player1_marks: Marks, player2_marks: Marks, move: tuple[z3.ExprRef]
 ) -> z3.ExprRef:
     cs = []
     cs.append(z3.Or(*move))
@@ -61,7 +60,7 @@ def problem(allow_draw: bool) -> z3.ExprRef:
                 z3.Exists(
                     move,
                     z3.And(
-                        is_possible_move(move, player1_marks, player2_marks),
+                        is_valid_move(player1_marks, player2_marks, move),
                         player2(
                             num_marks + 1,
                             player1_marks_new,
@@ -91,7 +90,7 @@ def problem(allow_draw: bool) -> z3.ExprRef:
                 z3.ForAll(
                     move,
                     z3.Implies(
-                        is_possible_move(move, player1_marks, player2_marks),
+                        is_valid_move(player1_marks, player2_marks, move),
                         player1(
                             num_marks + 1,
                             player1_marks,
@@ -114,30 +113,6 @@ def problem(allow_draw: bool) -> z3.ExprRef:
             return is_winning_board(player1_marks)
 
     return player1(0, tuple([z3.BoolVal(False)] * 9), tuple([z3.BoolVal(False)] * 9))
-
-
-# O_X
-# _OO
-# XXX
-board = list(
-    itertools.chain([False, None, True], [None, False, False], [True, True, True])
-)
-
-solver = z3.Solver()
-solver.append(
-    is_winning_board(
-        tuple(z3.BoolVal(x is True) for x in board),
-    )
-)
-assert solver.check() == z3.sat
-
-solver = z3.Solver()
-solver.append(
-    is_winning_board(
-        tuple(z3.BoolVal(x is False) for x in board),
-    )
-)
-assert solver.check() == z3.unsat
 
 
 solver = z3.Solver()
